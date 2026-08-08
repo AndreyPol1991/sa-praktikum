@@ -55,10 +55,13 @@ h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:27px;
 .step .st-n{font-family:Georgia,serif; font-size:12px; display:block}
 .step .st-t{font-size:13px; font-weight:600; display:block; color:var(--ink)}
 .step .st-s{font-size:11px; display:block; margin-top:1px}
-.step.locked{cursor:default; opacity:.45}
-.step.locked .st-t{color:var(--muted)}
+.step:hover{background:var(--surface2)}
 .step.act{border-bottom-color:var(--accent)}
 .step.done .st-s{color:var(--ok)}
+.step.done .st-t{color:var(--ok)}
+.linkskip{background:none; border:none; color:var(--muted); font-size:12.5px; cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:4px}
+.linkskip:hover{color:var(--accent)}
+.linkskip:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:5px}
 
 .wrap{max-width:900px; margin:0 auto; padding:24px 24px 90px}
 .stage-title{font-family:Georgia,serif; font-weight:400; font-size:24px; margin:6px 0 6px; text-wrap:balance}
@@ -283,7 +286,7 @@ tr.del td{background:var(--err-soft); text-decoration:line-through; color:var(--
       <div class="grow">
         <p class="eyebrow">Интерактивный кейс-квест · от заказчика до реализации</p>
         <h1>«Спроектируем сервис фитнес-клуба»</h1>
-        <p class="top-sub">Вы — системный аналитик. Заказчик уже в переговорке. Пройдите весь путь проекта: сформулируйте свои вопросы, проведите интервью и сами выведите требования, соберите путь клиента, спроектируйте модель данных — и передайте проект в разработку. Этапы открываются по очереди, прогресс сохраняется в браузере.</p>
+        <p class="top-sub">Вы — системный аналитик. Заказчик уже в переговорке. Пройдите весь путь проекта: сформулируйте свои вопросы, проведите интервью и сами выведите требования, соберите путь клиента, спроектируйте модель данных — и передайте проект в разработку. Между этапами можно переходить свободно в любом порядке, пройденные отмечаются галочкой. Прогресс сохраняется в браузере.</p>
       </div>
       <button class="resetmini" id="resetall" type="button">⟲ Начать с нуля</button>
     </div>
@@ -504,7 +507,10 @@ function stageScore(list){
   list.forEach(t=>{ const r=S.ans[t.id]; if(r){done++; if(r.ok) ok++} });
   return {done, ok, total:list.length};
 }
-function unlocked(i){
+/* этапы открыты все и всегда — ходить можно свободно */
+function unlocked(){ return true }
+/* reached — этап реально пройден: нужен для отметок и для выбора стартового экрана */
+function reached(i){
   if(i===0) return true;
   if(i===1) return S.started;
   if(i===2) return ivComplete();
@@ -1102,7 +1108,12 @@ function vInterview(main){
     function upd(){ go.disabled=S.myq.length<MIN_Q; go.textContent=S.myq.length<MIN_Q?`Вопросы готовы — провести интервью (ещё минимум ${MIN_Q-S.myq.length})`:"Вопросы готовы — провести интервью →" }
     go.addEventListener("click",()=>{ if(S.myq.length<MIN_Q) return; S.ivDone=true; save(); renderAll(); window.scrollTo({top:0}) });
     drawQ(); upd();
-    main.appendChild(go);
+    const row=el(`<div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap"></div>`);
+    row.appendChild(go);
+    const skip=el(`<button class="linkskip" type="button">смотреть ответы заказчика без своих вопросов</button>`);
+    skip.addEventListener("click",()=>{ S.ivDone=true; save(); renderAll(); window.scrollTo({top:0}) });
+    row.appendChild(skip);
+    main.appendChild(row);
     return;
   }
   /* after commit: reveal answers; student DERIVES the requirement, then self-checks */
@@ -1308,16 +1319,14 @@ function resetCase(ev){
 function renderStepper(){
   const st=document.getElementById("stepper"); st.innerHTML="";
   STAGES.forEach((sg,i)=>{
-    const un=unlocked(i);
-    const done=i<5&&unlocked(i+1);
-    const b=el(`<button class="step ${cur===i?"act":""} ${un?"":"locked"} ${done?"done":""}" type="button" ${un?"":"disabled"}>
-      <span class="st-n">${sg.n}</span><span class="st-t">${un?"":"🔒 "}${sg.t}</span><span class="st-s">${un?sg.s():"откроется позже"}</span></button>`);
-    if(un) b.addEventListener("click",()=>{cur=i; renderAll(); window.scrollTo({top:0})});
+    const done=i<5&&reached(i+1);
+    const b=el(`<button class="step ${cur===i?"act":""} ${done?"done":""}" type="button">
+      <span class="st-n">${sg.n}</span><span class="st-t">${done?"✓ ":""}${sg.t}</span><span class="st-s">${sg.s()}</span></button>`);
+    b.addEventListener("click",()=>{cur=i; renderAll(); window.scrollTo({top:0})});
     st.appendChild(b);
   });
 }
 function renderAll(){
-  if(!unlocked(cur)) cur=0;
   renderStepper();
   const main=document.getElementById("main"); main.innerHTML="";
   if(cur===0) vBrief(main);
@@ -1385,7 +1394,7 @@ Table session { // экземпляр: что случится в четверг
   if(cur===5) vFinal(main);
 }
 document.getElementById("resetall").addEventListener("click",resetCase);
-for(let i=5;i>=0;i--){ if(unlocked(i)){cur=i;break} }
+for(let i=5;i>=0;i--){ if(reached(i)){cur=i;break} }
 renderAll();
 </script>
 </body>
