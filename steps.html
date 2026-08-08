@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как строится модель данных: пошаговая сборка</title>
+<style>
+:root{
+  --bg:#F4F7F5; --surface:#FFFFFF; --surface2:#ECF1EE;
+  --ink:#1A2420; --muted:#5C6B63; --line:#DFE6E1;
+  --accent:#147A5E; --accent-ink:#FFFFFF; --accent-soft:#E6F2ED;
+  --amber:#B98A2F; --amber-soft:#F7EFDD;
+  --ok:#177A46; --ok-soft:#E8F5EE; --err:#BE3A2F; --err-soft:#FBEDEB;
+  --code-bg:#EFF3F0; --shadow:0 1px 3px rgba(26,36,32,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111815; --surface:#1A211D; --surface2:#212B25;
+    --ink:#E9F0EC; --muted:#93A69B; --line:#2B3830;
+    --accent:#4CC9A4; --accent-ink:#0D2019; --accent-soft:#1E332B;
+    --amber:#D9A94A; --amber-soft:#332A18;
+    --ok:#4CC38A; --ok-soft:#18301F; --err:#E5695E; --err-soft:#3A211E;
+    --code-bg:#151C18; --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F4F7F5; --surface:#FFFFFF; --surface2:#ECF1EE;
+  --ink:#1A2420; --muted:#5C6B63; --line:#DFE6E1;
+  --accent:#147A5E; --accent-ink:#FFFFFF; --accent-soft:#E6F2ED;
+  --amber:#B98A2F; --amber-soft:#F7EFDD;
+  --ok:#177A46; --ok-soft:#E8F5EE; --err:#BE3A2F; --err-soft:#FBEDEB;
+  --code-bg:#EFF3F0; --shadow:0 1px 3px rgba(26,36,32,.08);
+}
+:root[data-theme="dark"]{
+  --bg:#111815; --surface:#1A211D; --surface2:#212B25;
+  --ink:#E9F0EC; --muted:#93A69B; --line:#2B3830;
+  --accent:#4CC9A4; --accent-ink:#0D2019; --accent-soft:#1E332B;
+  --amber:#D9A94A; --amber-soft:#332A18;
+  --ok:#4CC38A; --ok-soft:#18301F; --err:#E5695E; --err-soft:#3A211E;
+  --code-bg:#151C18; --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--bg); color:var(--ink); font:15px/1.6 "Segoe UI",-apple-system,system-ui,Roboto,sans-serif}
+button{font:inherit; color:inherit}
+
+.top{background:var(--surface); border-bottom:1px solid var(--line); padding:22px 22px 0}
+.in{max-width:1180px; margin:0 auto}
+.eyebrow{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:5px}
+h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:27px; line-height:1.2; margin-bottom:6px; text-wrap:balance}
+.sub{color:var(--muted); font-size:13.5px; max-width:76ch; margin-bottom:14px}
+.rail{display:flex; gap:3px; overflow-x:auto; padding-bottom:0}
+.rb{flex:1 1 0; min-width:74px; border:none; background:none; cursor:pointer; text-align:left; padding:7px 8px 10px; border-bottom:3px solid var(--line); color:var(--muted)}
+.rb:hover{background:var(--surface2)}
+.rb:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.rb .rn{font-family:Georgia,serif; font-size:11px; display:block}
+.rb .rt{font-size:12px; font-weight:600; display:block; color:var(--ink); line-height:1.25}
+.rb.act{border-bottom-color:var(--accent)}
+.rb.act .rt{color:var(--accent)}
+.rb.done{border-bottom-color:var(--accent-soft)}
+
+.app{max-width:1180px; margin:0 auto; padding:20px 22px 80px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:22px; align-items:start}
+@media (max-width:900px){.app{grid-template-columns:1fr}}
+
+.panel{border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); padding:18px 20px; margin-bottom:14px}
+.stepno{font-family:Georgia,serif; font-size:12px; color:var(--accent); letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px}
+h2{font-family:Georgia,serif; font-weight:400; font-size:23px; margin-bottom:8px; text-wrap:balance}
+.panel p{margin:8px 0; max-width:62ch}
+.qself{border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:10px 13px; margin:12px 0; font-size:14px}
+.qself b{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); margin-bottom:3px}
+.why{border-left:3px solid var(--amber); background:var(--amber-soft); border-radius:0 8px 8px 0; padding:10px 13px; margin:12px 0; font-size:14px}
+.why b{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--amber); margin-bottom:3px}
+.panel ul,.panel ol{margin:8px 0 8px 20px; max-width:62ch}
+.panel li{margin:4px 0}
+code{background:var(--code-bg); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font:12.5px Consolas,"Cascadia Mono",monospace}
+
+.nav{display:flex; gap:10px; align-items:center; margin-top:4px}
+.nb{background:var(--accent); color:var(--accent-ink); border:none; border-radius:9px; padding:9px 18px; font-weight:600; font-size:14px; cursor:pointer}
+.nb:disabled{opacity:.4; cursor:default}
+.nb.ghost{background:none; border:1px solid var(--line); color:var(--muted); font-weight:500}
+.nb.ghost:hover:not(:disabled){border-color:var(--accent); color:var(--accent)}
+.nb:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.kbd{font-size:12px; color:var(--muted); margin-left:auto}
+
+.right{position:sticky; top:14px}
+.mhead{display:flex; align-items:baseline; gap:10px; margin-bottom:8px}
+.mhead h3{font-family:Georgia,serif; font-weight:400; font-size:18px}
+.mhead .cnt{font-size:12px; color:var(--muted); margin-left:auto}
+.empty{border:1px dashed var(--line); border-radius:11px; padding:26px 18px; text-align:center; color:var(--muted); font-size:13.5px}
+
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(184px,1fr)); gap:10px}
+.tbl{border:1px solid var(--line); border-radius:10px; background:var(--surface); overflow:hidden}
+.tbl.isnew{border-color:var(--ok); box-shadow:0 0 0 2px var(--ok-soft)}
+.tbl .tn{background:var(--surface2); padding:6px 10px; font:600 12.5px Consolas,monospace; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:6px}
+.tbl.isnew .tn{background:var(--ok-soft); color:var(--ok)}
+.tbl .badge{font-size:9px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; border-radius:3px; padding:1px 5px; margin-left:auto; background:var(--accent-soft); color:var(--accent)}
+.tbl .badge.inst{background:var(--amber-soft); color:var(--amber)}
+.tbl .badge.link{background:var(--err-soft); color:var(--err)}
+.fl{padding:4px 10px; font:11.5px/1.5 Consolas,monospace; border-bottom:1px solid var(--line); display:flex; gap:6px}
+.fl:last-child{border-bottom:none}
+.fl.isnew{background:var(--amber-soft)}
+.fl .k{color:var(--accent); font-weight:700; flex:none; width:14px}
+.fl .k.fk{color:var(--amber)}
+.fl .ty{color:var(--muted); margin-left:auto; font-size:10.5px}
+
+.cands{display:flex; flex-wrap:wrap; gap:6px}
+.cd{border:1px solid var(--line); border-radius:16px; padding:4px 11px; font-size:12.5px; background:var(--surface)}
+.cd.keep{border-color:var(--ok); background:var(--ok-soft); color:var(--ok)}
+.cd.cut{border-color:var(--line); background:var(--surface2); color:var(--muted); text-decoration:line-through}
+.cd .rs{font-size:10px; opacity:.85; margin-left:4px; text-decoration:none; display:inline-block}
+
+.rels{font-size:12.5px}
+.rel{display:flex; gap:8px; align-items:baseline; padding:5px 9px; border:1px solid var(--line); border-radius:8px; margin-bottom:5px; background:var(--surface); font-family:Consolas,monospace}
+.rel.isnew{border-color:var(--ok); background:var(--ok-soft)}
+.rel .card{font-weight:700; color:var(--accent); flex:none}
+.rel .card.mn{color:var(--err)}
+.rel .note{font-family:"Segoe UI",sans-serif; color:var(--muted); font-size:11.5px; margin-left:auto}
+
+.cons{font-size:12.5px}
+.con{border:1px solid var(--line); border-left:3px solid var(--err); border-radius:0 8px 8px 0; padding:7px 11px; margin-bottom:6px; background:var(--surface)}
+.con code{font-size:11.5px}
+.con .cw{display:block; color:var(--muted); font-size:11.5px; margin-top:2px}
+
+.evt{border:1px solid var(--line); border-radius:9px; padding:8px 11px; margin-bottom:6px; background:var(--surface); font-size:13px}
+.evt b{color:var(--ok)}
+.asm{border:1px solid var(--line); border-radius:9px; padding:8px 11px; margin-bottom:6px; background:var(--surface2); font-size:13px; color:var(--muted)}
+
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); margin-top:10px}
+.legend i{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:4px}
+.svgbox{background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:10px; overflow:auto; max-height:72vh}
+.svgbox svg{display:block; height:auto; max-width:none}
+.hint{font-size:12.5px; color:var(--muted); margin-top:9px}
+.panel h4{font-size:14px; font-weight:600}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="in">
+    <p class="eyebrow">Интерактивный разбор</p>
+    <h1>Как строится модель данных: сборка по шагам</h1>
+    <p class="sub">Слева — что делает аналитик на каждом шаге и почему. Справа — модель, которая от этого меняется прямо на глазах: появляются таблицы, у них вырастают поля, связи и ограничения. Новое на текущем шаге подсвечено. Листайте кнопками или стрелками ← →.</p>
+    <nav class="rail" id="rail" aria-label="Шаги"></nav>
+  </div>
+</header>
+
+<div class="app">
+  <section id="left"></section>
+  <section class="right" id="right"></section>
+</div>
+
+<div id="erdsrc" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-diagram-type="CLASS" style="width:1280px;height:726px;background:#FFFFFF;" width="1280px" height="726px" viewBox="0 0 1280 726" zoomAndPan="magnify" preserveAspectRatio="none" contentStyleType="text/css"><?plantuml 1.2026.7beta11?><defs/><g font-family="sans-serif" lengthAdjust="spacing"><!--class client--><g class="entity" data-qualified-name="client" id="ent0001" data-source-line="21"><rect x="524.02" y="15.14" width="147.427" height="123.781" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="578.507" y="33.135" fill="#000" font-size="14" textLength="38.452">client</text><line x1="525.02" y1="41.437" x2="670.447" y2="41.437" style="stroke:#181818;stroke-width:0.5;"/><text x="530.02" y="58.432" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="525.02" y1="65.734" x2="670.447" y2="65.734" style="stroke:#181818;stroke-width:1;"/><text x="530.02" y="82.729" fill="#000" font-size="14" textLength="135.427">full_name : varchar</text><text x="530.02" y="99.026" fill="#000" font-size="14" textLength="110.954">phone : varchar</text><text x="530.02" y="115.323" fill="#000" font-size="14" textLength="105.752">email : varchar</text><text x="530.02" y="131.619" fill="#000" font-size="14" textLength="110.161">status : varchar</text></g><!--class company--><g class="entity" data-qualified-name="company" id="ent0002" data-source-line="30"><rect x="112.31" y="31.44" width="118.846" height="91.188" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="139.471" y="49.435" fill="#000" font-size="14" textLength="64.524">company</text><line x1="113.31" y1="57.737" x2="230.156" y2="57.737" style="stroke:#181818;stroke-width:0.5;"/><text x="118.31" y="74.732" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="113.31" y1="82.034" x2="230.156" y2="82.034" style="stroke:#181818;stroke-width:1;"/><text x="118.31" y="99.029" fill="#000" font-size="14" textLength="106.846">name : varchar</text><text x="118.31" y="115.326" fill="#000" font-size="14" textLength="88.778">inn : varchar</text></g><!--class mtype--><g class="entity" data-qualified-name="mtype" id="ent0003" data-source-line="38"><rect x="266.59" y="7" width="196.276" height="140.078" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="301.547" y="24.995" fill="#000" font-size="14" textLength="126.362">membership_type</text><line x1="267.59" y1="33.297" x2="461.866" y2="33.297" style="stroke:#181818;stroke-width:0.5;"/><text x="272.59" y="50.292" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="267.59" y1="57.594" x2="461.866" y2="57.594" style="stroke:#181818;stroke-width:1;"/><text x="272.59" y="74.589" fill="#000" font-size="14" textLength="106.846">name : varchar</text><text x="272.59" y="90.886" fill="#000" font-size="14" textLength="103.653">price : decimal</text><text x="272.59" y="107.183" fill="#000" font-size="14" textLength="98.513">visit_limit : int</text><text x="272.59" y="123.479" fill="#000" font-size="14" textLength="135.728">time_limit_to : time</text><text x="272.59" y="139.776" fill="#000" font-size="14" textLength="184.276">freeze_days_per_year : int</text></g><!--class memb--><g class="entity" data-qualified-name="memb" id="ent0004" data-source-line="49"><rect x="241.86" y="207.07" width="201.738" height="205.266" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="298.685" y="225.065" fill="#000" font-size="14" textLength="88.088">membership</text><line x1="242.86" y1="233.367" x2="442.598" y2="233.367" style="stroke:#181818;stroke-width:0.5;"/><text x="247.86" y="250.362" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="242.86" y1="257.664" x2="442.598" y2="257.664" style="stroke:#181818;stroke-width:1;"/><text x="247.86" y="274.659" fill="#000" font-size="14" textLength="101.828">#client_id : int</text><text x="247.86" y="290.956" fill="#000" font-size="14" textLength="127.9">#company_id : int</text><text x="247.86" y="307.253" fill="#000" font-size="14" textLength="189.738">#membership_type_id : int</text><text x="247.86" y="323.549" fill="#000" font-size="14" textLength="103.653">price : decimal</text><text x="247.86" y="339.846" fill="#000" font-size="14" textLength="98.513">visit_limit : int</text><text x="247.86" y="356.143" fill="#000" font-size="14" textLength="135.728">time_limit_to : time</text><text x="247.86" y="372.44" fill="#000" font-size="14" textLength="109.525">starts_on : date</text><text x="247.86" y="388.737" fill="#000" font-size="14" textLength="103.291">ends_on : date</text><text x="247.86" y="405.034" fill="#000" font-size="14" textLength="110.161">status : varchar</text></g><!--class freeze--><g class="entity" data-qualified-name="freeze" id="ent0005" data-source-line="63"><rect x="7" y="480.49" width="163.464" height="107.484" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="40.997" y="498.485" fill="#000" font-size="14" textLength="95.471">freeze_period</text><line x1="8" y1="506.787" x2="169.464" y2="506.787" style="stroke:#181818;stroke-width:0.5;"/><text x="13" y="523.782" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="8" y1="531.084" x2="169.464" y2="531.084" style="stroke:#181818;stroke-width:1;"/><text x="13" y="548.079" fill="#000" font-size="14" textLength="151.464">#membership_id : int</text><text x="13" y="564.376" fill="#000" font-size="14" textLength="109.525">starts_on : date</text><text x="13" y="580.673" fill="#000" font-size="14" textLength="103.291">ends_on : date</text></g><!--class visit--><g class="entity" data-qualified-name="visit" id="ent0006" data-source-line="72"><rect x="448.37" y="472.34" width="164.729" height="123.781" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="516.31" y="490.335" fill="#000" font-size="14" textLength="28.848">visit</text><line x1="449.37" y1="498.637" x2="612.099" y2="498.637" style="stroke:#181818;stroke-width:0.5;"/><text x="454.37" y="515.632" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="449.37" y1="522.934" x2="612.099" y2="522.934" style="stroke:#181818;stroke-width:1;"/><text x="454.37" y="539.929" fill="#000" font-size="14" textLength="101.828">#client_id : int</text><text x="454.37" y="556.226" fill="#000" font-size="14" textLength="151.464">#membership_id : int</text><text x="454.37" y="572.523" fill="#000" font-size="14" textLength="152.729">entered_at : datetime</text><text x="454.37" y="588.819" fill="#000" font-size="14" textLength="120.805">left_at : datetime</text></g><!--class trainer--><g class="entity" data-qualified-name="trainer" id="ent0007" data-source-line="83"><rect x="880.02" y="31.44" width="147.427" height="91.188" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="930.255" y="49.435" fill="#000" font-size="14" textLength="46.956">trainer</text><line x1="881.02" y1="57.737" x2="1026.447" y2="57.737" style="stroke:#181818;stroke-width:0.5;"/><text x="886.02" y="74.732" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="881.02" y1="82.034" x2="1026.447" y2="82.034" style="stroke:#181818;stroke-width:1;"/><text x="886.02" y="99.029" fill="#000" font-size="14" textLength="135.427">full_name : varchar</text><text x="886.02" y="115.326" fill="#000" font-size="14" textLength="110.161">status : varchar</text></g><!--class wtype--><g class="entity" data-qualified-name="wtype" id="ent0008" data-source-line="90"><rect x="1071.31" y="39.59" width="118.846" height="74.891" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="1083.192" y="57.585" fill="#000" font-size="14" textLength="95.081">workout_type</text><line x1="1072.31" y1="65.887" x2="1189.156" y2="65.887" style="stroke:#181818;stroke-width:0.5;"/><text x="1077.31" y="82.882" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="1072.31" y1="90.184" x2="1189.156" y2="90.184" style="stroke:#181818;stroke-width:1;"/><text x="1077.31" y="107.179" fill="#000" font-size="14" textLength="106.846">name : varchar</text></g><!--class twt--><g class="entity" data-qualified-name="twt" id="ent0009" data-source-line="97"><rect x="1059.5" y="264.11" width="170.457" height="91.188" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="1070.21" y="282.105" fill="#000" font-size="14" textLength="149.037">trainer_workout_type</text><line x1="1060.5" y1="290.407" x2="1228.957" y2="290.407" style="stroke:#181818;stroke-width:0.5;"/><text x="1065.5" y="307.402" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="1060.5" y1="314.704" x2="1228.957" y2="314.704" style="stroke:#181818;stroke-width:1;"/><text x="1065.5" y="331.699" fill="#000" font-size="14" textLength="110.332">#trainer_id : int</text><text x="1065.5" y="347.996" fill="#000" font-size="14" textLength="158.457">#workout_type_id : int</text></g><!--class hall--><g class="entity" data-qualified-name="hall" id="ent0010" data-source-line="104"><rect x="726.31" y="23.29" width="118.846" height="107.484" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="773.117" y="41.285" fill="#000" font-size="14" textLength="25.231">hall</text><line x1="727.31" y1="49.587" x2="844.156" y2="49.587" style="stroke:#181818;stroke-width:0.5;"/><text x="732.31" y="66.582" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="727.31" y1="73.884" x2="844.156" y2="73.884" style="stroke:#181818;stroke-width:1;"/><text x="732.31" y="90.879" fill="#000" font-size="14" textLength="80.992">club_id : int</text><text x="732.31" y="107.176" fill="#000" font-size="14" textLength="106.846">name : varchar</text><text x="732.31" y="123.473" fill="#000" font-size="14" textLength="90.973">capacity : int</text></g><!--class workout--><g class="entity" data-qualified-name="workout" id="ent0011" data-source-line="113"><rect x="854.5" y="231.52" width="170.457" height="156.375" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="911.325" y="249.515" fill="#000" font-size="14" textLength="56.807">workout</text><line x1="855.5" y1="257.817" x2="1023.957" y2="257.817" style="stroke:#181818;stroke-width:0.5;"/><text x="860.5" y="274.812" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="855.5" y1="282.114" x2="1023.957" y2="282.114" style="stroke:#181818;stroke-width:1;"/><text x="860.5" y="299.109" fill="#000" font-size="14" textLength="158.457">#workout_type_id : int</text><text x="860.5" y="315.406" fill="#000" font-size="14" textLength="110.332">#trainer_id : int</text><text x="860.5" y="331.703" fill="#000" font-size="14" textLength="88.607">#hall_id : int</text><text x="860.5" y="347.999" fill="#000" font-size="14" textLength="137.785">starts_at : datetime</text><text x="860.5" y="364.296" fill="#000" font-size="14" textLength="90.973">capacity : int</text><text x="860.5" y="380.593" fill="#000" font-size="14" textLength="110.161">status : varchar</text></g><!--class booking--><g class="entity" data-qualified-name="booking" id="ent0012" data-source-line="125"><rect x="647.97" y="472.34" width="163.519" height="123.781" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="701.842" y="490.335" fill="#000" font-size="14" textLength="55.774">booking</text><line x1="648.97" y1="498.637" x2="810.489" y2="498.637" style="stroke:#181818;stroke-width:0.5;"/><text x="653.97" y="515.632" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="648.97" y1="522.934" x2="810.489" y2="522.934" style="stroke:#181818;stroke-width:1;"/><text x="653.97" y="539.929" fill="#000" font-size="14" textLength="120.183">#workout_id : int</text><text x="653.97" y="556.226" fill="#000" font-size="14" textLength="101.828">#client_id : int</text><text x="653.97" y="572.523" fill="#000" font-size="14" textLength="110.161">status : varchar</text><text x="653.97" y="588.819" fill="#000" font-size="14" textLength="151.519">created_at : datetime</text></g><!--class pack--><g class="entity" data-qualified-name="pack" id="ent0013" data-source-line="136"><rect x="675.91" y="239.67" width="143.653" height="140.078" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="684.333" y="257.665" fill="#000" font-size="14" textLength="126.807">personal_package</text><line x1="676.91" y1="265.967" x2="818.563" y2="265.967" style="stroke:#181818;stroke-width:0.5;"/><text x="681.91" y="282.962" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="676.91" y1="290.264" x2="818.563" y2="290.264" style="stroke:#181818;stroke-width:1;"/><text x="681.91" y="307.259" fill="#000" font-size="14" textLength="101.828">#client_id : int</text><text x="681.91" y="323.556" fill="#000" font-size="14" textLength="110.332">#trainer_id : int</text><text x="681.91" y="339.853" fill="#000" font-size="14" textLength="129.999">sessions_total : int</text><text x="681.91" y="356.149" fill="#000" font-size="14" textLength="131.653">sessions_used : int</text><text x="681.91" y="372.446" fill="#000" font-size="14" textLength="103.653">price : decimal</text></g><!--class slot--><g class="entity" data-qualified-name="slot" id="ent0014" data-source-line="146"><rect x="846.84" y="472.34" width="149.785" height="123.781" fill="#F1F1F1" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="875.385" y="490.335" fill="#000" font-size="14" textLength="92.695">personal_slot</text><line x1="847.84" y1="498.637" x2="995.625" y2="498.637" style="stroke:#181818;stroke-width:0.5;"/><text x="852.84" y="515.632" fill="#000" font-size="14" textLength="51.646">*id : int</text><line x1="847.84" y1="522.934" x2="995.625" y2="522.934" style="stroke:#181818;stroke-width:1;"/><text x="852.84" y="539.929" fill="#000" font-size="14" textLength="122.726">#package_id : int</text><text x="852.84" y="556.226" fill="#000" font-size="14" textLength="110.332">#trainer_id : int</text><text x="852.84" y="572.523" fill="#000" font-size="14" textLength="137.785">starts_at : datetime</text><text x="852.84" y="588.819" fill="#000" font-size="14" textLength="110.161">status : varchar</text></g><g class="entity" data-qualified-name="GMN31" id="ent0032" data-source-line="177"><path d="M205.65,506.53 L205.65,561.928 A0,0 0 0 0 205.65,561.928 L413.817,561.928 A0,0 0 0 0 413.817,561.928 L413.817,516.53 L403.817,506.53 L360.5,506.53 L356.5,412.77 L352.5,506.53 L205.65,506.53 A0,0 0 0 0 205.65,506.53" style="stroke:#181818;stroke-width:0.5;" fill="#FEFFDD"/><path d="M403.817,506.53 L403.817,516.53 L413.817,516.53 L403.817,506.53" style="stroke:#181818;stroke-width:0.5;" fill="#FEFFDD"/><text x="211.65" y="523.597" fill="#000" font-size="13" textLength="168.137">Снимок цены и условий:</text><text x="211.65" y="538.73" fill="#000" font-size="13" textLength="162.202">тариф потом меняется,</text><text x="211.65" y="553.863" fill="#000" font-size="13" textLength="187.167">а карта живёт по прежним</text></g><g class="entity" data-qualified-name="GMN34" id="ent0035" data-source-line="183"><path d="M1031.82,506.53 L1031.82,561.928 A0,0 0 0 0 1031.82,561.928 L1265.644,561.928 A0,0 0 0 0 1265.644,561.928 L1265.644,516.53 L1255.644,506.53 L1148.73,506.53 L1144.73,355.68 L1140.73,506.53 L1031.82,506.53 A0,0 0 0 0 1031.82,506.53" style="stroke:#181818;stroke-width:0.5;" fill="#FEFFDD"/><path d="M1255.644,506.53 L1255.644,516.53 L1265.644,516.53 L1255.644,506.53" style="stroke:#181818;stroke-width:0.5;" fill="#FEFFDD"/><text x="1037.82" y="523.597" fill="#000" font-size="13" textLength="170.022">Связь M:N: тренер ведёт</text><text x="1037.82" y="538.73" fill="#000" font-size="13" textLength="120.206">несколько видов,</text><text x="1037.82" y="553.863" fill="#000" font-size="13" textLength="212.824">вид ведут несколько тренеров</text></g><g class="entity" data-qualified-name="GMN37" id="ent0038" data-source-line="189"><path d="M816.19,656.12 L816.19,711.518 A0,0 0 0 0 816.19,711.518 L1027.271,711.518 A0,0 0 0 0 1027.271,711.518 L1027.271,666.12 L1017.271,656.12 L925.73,656.12 L921.73,596.37 L917.73,656.12 L816.19,656.12 A0,0 0 0 0 816.19,656.12" style="stroke:#181818;stroke-width:0.5;" fill="#FEFFDD"/><path d="M1017.271,656.12 L1017.271,666.12 L1027.271,666.12 L1017.271,656.12" style="stroke:#181818;stroke-width:0.5;" fill="#FEFFDD"/><text x="822.19" y="673.187" fill="#000" font-size="13" textLength="190.081">unique (trainer_id, starts_at):</text><text x="822.19" y="688.32" fill="#000" font-size="13" textLength="165.89">двойная продажа слота</text><text x="822.19" y="703.453" fill="#000" font-size="13" textLength="163.147">физически невозможна</text></g><!--link client to memb--><g class="link" data-entity-1="ent0001" data-entity-2="ent0004" id="lnk15" data-source-line="157" data-link-type="crowfoot"><path d="M553.71,147.12 C553.71,185.51 553.71,219.52 553.71,219.52 C553.71,219.52 516.04,219.52 461.9,219.52" style="stroke:#181818;stroke-width:1;" fill="none" id="client-memb" codeLine="157"/><line x1="549.71" y1="143.12" x2="557.71" y2="143.12" style="stroke:#181818;stroke-width:1;"/><line x1="549.71" y1="146.12" x2="557.71" y2="146.12" style="stroke:#181818;stroke-width:1;"/><line x1="553.71" y1="147.12" x2="553.71" y2="139.12" style="stroke:#181818;stroke-width:1;"/><line x1="451.9" y1="219.52" x2="443.9" y2="225.52" style="stroke:#181818;stroke-width:1;"/><line x1="451.9" y1="219.52" x2="443.9" y2="213.52" style="stroke:#181818;stroke-width:1;"/><line x1="451.9" y1="219.52" x2="443.9" y2="219.52" style="stroke:#181818;stroke-width:1;"/><ellipse cx="457.9" cy="219.52" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="474.01" y="215.587" fill="#000" font-size="13" textLength="64.035">покупает</text></g><!--link company to memb--><g class="link" data-entity-1="ent0002" data-entity-2="ent0004" id="lnk16" data-source-line="158" data-link-type="crowfoot"><path d="M246.25,77.52 C259.26,77.52 254.23,77.52 254.23,77.52 C254.23,77.52 254.23,126.75 254.23,188.85" style="stroke:#181818;stroke-width:1;" fill="none" id="company-memb" codeLine="158"/><line x1="242.25" y1="77.52" x2="231.25" y2="77.52" style="stroke:#181818;stroke-width:1;"/><ellipse cx="242.25" cy="77.52" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><line x1="235.25" y1="81.52" x2="235.25" y2="73.52" style="stroke:#181818;stroke-width:1;"/><line x1="254.23" y1="198.85" x2="260.23" y2="206.85" style="stroke:#181818;stroke-width:1;"/><line x1="254.23" y1="198.85" x2="248.23" y2="206.85" style="stroke:#181818;stroke-width:1;"/><line x1="254.23" y1="198.85" x2="254.23" y2="206.85" style="stroke:#181818;stroke-width:1;"/><ellipse cx="254.23" cy="192.85" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="173.23" y="143.767" fill="#000" font-size="13" textLength="80.057">оплачивает</text></g><!--link mtype to memb--><g class="link" data-entity-1="ent0003" data-entity-2="ent0004" id="lnk17" data-source-line="159" data-link-type="crowfoot"><path d="M355.1,155.48 C355.1,174.2 355.1,168.82 355.1,188.89" style="stroke:#181818;stroke-width:1;" fill="none" id="mtype-memb" codeLine="159"/><line x1="351.1" y1="151.48" x2="359.1" y2="151.48" style="stroke:#181818;stroke-width:1;"/><line x1="351.1" y1="154.48" x2="359.1" y2="154.48" style="stroke:#181818;stroke-width:1;"/><line x1="355.1" y1="155.48" x2="355.1" y2="147.48" style="stroke:#181818;stroke-width:1;"/><line x1="355.1" y1="198.89" x2="361.1" y2="206.89" style="stroke:#181818;stroke-width:1;"/><line x1="355.1" y1="198.89" x2="349.1" y2="206.89" style="stroke:#181818;stroke-width:1;"/><line x1="355.1" y1="198.89" x2="355.1" y2="206.89" style="stroke:#181818;stroke-width:1;"/><ellipse cx="355.1" cy="192.89" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="283.1" y="173.247" fill="#000" font-size="13" textLength="71.633">по тарифу</text></g><!--link memb to freeze--><g class="link" data-entity-1="ent0004" data-entity-2="ent0005" id="lnk18" data-source-line="160" data-link-type="crowfoot"><path d="M299.18,420.63 C299.18,462.63 299.18,493.52 299.18,493.52 C299.18,493.52 247.79,493.52 188.7,493.52" style="stroke:#181818;stroke-width:1;" fill="none" id="memb-freeze" codeLine="160"/><line x1="295.18" y1="416.63" x2="303.18" y2="416.63" style="stroke:#181818;stroke-width:1;"/><line x1="295.18" y1="419.63" x2="303.18" y2="419.63" style="stroke:#181818;stroke-width:1;"/><line x1="299.18" y1="420.63" x2="299.18" y2="412.63" style="stroke:#181818;stroke-width:1;"/><line x1="178.7" y1="493.52" x2="170.7" y2="499.52" style="stroke:#181818;stroke-width:1;"/><line x1="178.7" y1="493.52" x2="170.7" y2="487.52" style="stroke:#181818;stroke-width:1;"/><line x1="178.7" y1="493.52" x2="170.7" y2="493.52" style="stroke:#181818;stroke-width:1;"/><ellipse cx="184.7" cy="493.52" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="276.38" y="489.587" fill="#000" font-size="13" textLength="115.185">замораживается</text></g><!--link client to visit--><g class="link" data-entity-1="ent0001" data-entity-2="ent0006" id="lnk19" data-source-line="161" data-link-type="crowfoot"><path d="M583.4,147.17 C583.4,234.46 583.4,366.46 583.4,453.87" style="stroke:#181818;stroke-width:1;" fill="none" id="client-visit" codeLine="161"/><line x1="579.4" y1="143.17" x2="587.4" y2="143.17" style="stroke:#181818;stroke-width:1;"/><line x1="579.4" y1="146.17" x2="587.4" y2="146.17" style="stroke:#181818;stroke-width:1;"/><line x1="583.4" y1="147.17" x2="583.4" y2="139.17" style="stroke:#181818;stroke-width:1;"/><line x1="583.4" y1="463.87" x2="589.4" y2="471.87" style="stroke:#181818;stroke-width:1;"/><line x1="583.4" y1="463.87" x2="577.4" y2="471.87" style="stroke:#181818;stroke-width:1;"/><line x1="583.4" y1="463.87" x2="583.4" y2="471.87" style="stroke:#181818;stroke-width:1;"/><ellipse cx="583.4" cy="457.87" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="517.4" y="301.587" fill="#000" font-size="13" textLength="65.362">проходит</text></g><!--link memb to visit--><g class="link" data-entity-1="ent0004" data-entity-2="ent0006" id="lnk20" data-source-line="162" data-link-type="crowfoot"><path d="M428.71,420.5 C428.71,454.83 428.71,476.52 428.71,476.52 C428.71,476.52 418.56,476.52 429.9,476.52" style="stroke:#181818;stroke-width:1;" fill="none" id="memb-visit" codeLine="162"/><line x1="424.71" y1="416.5" x2="432.71" y2="416.5" style="stroke:#181818;stroke-width:1;"/><line x1="424.71" y1="419.5" x2="432.71" y2="419.5" style="stroke:#181818;stroke-width:1;"/><line x1="428.71" y1="420.5" x2="428.71" y2="412.5" style="stroke:#181818;stroke-width:1;"/><line x1="439.9" y1="476.52" x2="447.9" y2="470.52" style="stroke:#181818;stroke-width:1;"/><line x1="439.9" y1="476.52" x2="447.9" y2="482.52" style="stroke:#181818;stroke-width:1;"/><line x1="439.9" y1="476.52" x2="447.9" y2="476.52" style="stroke:#181818;stroke-width:1;"/><ellipse cx="433.9" cy="476.52" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="355.71" y="450.177" fill="#000" font-size="13" textLength="72.706">списывает</text></g><!--link trainer to twt--><g class="link" data-entity-1="ent0007" data-entity-2="ent0009" id="lnk21" data-source-line="164" data-link-type="crowfoot"><path d="M1035.91,119.52 C1056.54,119.52 1065.41,119.52 1065.41,119.52 C1065.41,119.52 1065.41,189.38 1065.41,245.67" style="stroke:#181818;stroke-width:1;" fill="none" id="trainer-twt" codeLine="164"/><line x1="1031.91" y1="123.52" x2="1031.91" y2="115.52" style="stroke:#181818;stroke-width:1;"/><line x1="1034.91" y1="123.52" x2="1034.91" y2="115.52" style="stroke:#181818;stroke-width:1;"/><line x1="1035.91" y1="119.52" x2="1027.91" y2="119.52" style="stroke:#181818;stroke-width:1;"/><line x1="1065.41" y1="255.67" x2="1071.41" y2="263.67" style="stroke:#181818;stroke-width:1;"/><line x1="1065.41" y1="255.67" x2="1059.41" y2="263.67" style="stroke:#181818;stroke-width:1;"/><line x1="1065.41" y1="255.67" x2="1065.41" y2="263.67" style="stroke:#181818;stroke-width:1;"/><ellipse cx="1065.41" cy="249.67" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/></g><!--link wtype to twt--><g class="link" data-entity-1="ent0008" data-entity-2="ent0009" id="lnk22" data-source-line="165" data-link-type="crowfoot"><path d="M1150.54,122.94 C1150.54,163.63 1150.54,202.28 1150.54,245.82" style="stroke:#181818;stroke-width:1;" fill="none" id="wtype-twt" codeLine="165"/><line x1="1146.54" y1="118.94" x2="1154.54" y2="118.94" style="stroke:#181818;stroke-width:1;"/><line x1="1146.54" y1="121.94" x2="1154.54" y2="121.94" style="stroke:#181818;stroke-width:1;"/><line x1="1150.54" y1="122.94" x2="1150.54" y2="114.94" style="stroke:#181818;stroke-width:1;"/><line x1="1150.54" y1="255.82" x2="1156.54" y2="263.82" style="stroke:#181818;stroke-width:1;"/><line x1="1150.54" y1="255.82" x2="1144.54" y2="263.82" style="stroke:#181818;stroke-width:1;"/><line x1="1150.54" y1="255.82" x2="1150.54" y2="263.82" style="stroke:#181818;stroke-width:1;"/><ellipse cx="1150.54" cy="249.82" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/></g><!--link wtype to workout--><g class="link" data-entity-1="ent0008" data-entity-2="ent0011" id="lnk23" data-source-line="166" data-link-type="crowfoot"><path d="M1110.92,122.67 C1110.92,173.15 1110.92,248.52 1110.92,248.52 C1110.92,248.52 1086.13,248.52 1043.33,248.52" style="stroke:#181818;stroke-width:1;" fill="none" id="wtype-workout" codeLine="166"/><line x1="1106.92" y1="118.67" x2="1114.92" y2="118.67" style="stroke:#181818;stroke-width:1;"/><line x1="1106.92" y1="121.67" x2="1114.92" y2="121.67" style="stroke:#181818;stroke-width:1;"/><line x1="1110.92" y1="122.67" x2="1110.92" y2="114.67" style="stroke:#181818;stroke-width:1;"/><line x1="1033.33" y1="248.52" x2="1025.33" y2="254.52" style="stroke:#181818;stroke-width:1;"/><line x1="1033.33" y1="248.52" x2="1025.33" y2="242.52" style="stroke:#181818;stroke-width:1;"/><line x1="1033.33" y1="248.52" x2="1025.33" y2="248.52" style="stroke:#181818;stroke-width:1;"/><ellipse cx="1039.33" cy="248.52" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="1040.92" y="220.457" fill="#000" font-size="13" textLength="69.304">какой вид</text></g><!--link trainer to workout--><g class="link" data-entity-1="ent0007" data-entity-2="ent0011" id="lnk24" data-source-line="167" data-link-type="crowfoot"><path d="M952.49,131 C952.49,161.86 952.49,177.3 952.49,213.3" style="stroke:#181818;stroke-width:1;" fill="none" id="trainer-workout" codeLine="167"/><line x1="948.49" y1="127" x2="956.49" y2="127" style="stroke:#181818;stroke-width:1;"/><line x1="948.49" y1="130" x2="956.49" y2="130" style="stroke:#181818;stroke-width:1;"/><line x1="952.49" y1="131" x2="952.49" y2="123" style="stroke:#181818;stroke-width:1;"/><line x1="952.49" y1="223.3" x2="958.49" y2="231.3" style="stroke:#181818;stroke-width:1;"/><line x1="952.49" y1="223.3" x2="946.49" y2="231.3" style="stroke:#181818;stroke-width:1;"/><line x1="952.49" y1="223.3" x2="952.49" y2="231.3" style="stroke:#181818;stroke-width:1;"/><ellipse cx="952.49" cy="217.3" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="884.49" y="173.217" fill="#000" font-size="13" textLength="67.729">кто ведёт</text></g><!--link hall to workout--><g class="link" data-entity-1="ent0010" data-entity-2="ent0011" id="lnk25" data-source-line="168" data-link-type="crowfoot"><path d="M832.36,139.03 C832.36,185.3 832.36,236.52 832.36,236.52 C832.36,236.52 823.33,236.52 836.09,236.52" style="stroke:#181818;stroke-width:1;" fill="none" id="hall-workout" codeLine="168"/><line x1="828.36" y1="135.03" x2="836.36" y2="135.03" style="stroke:#181818;stroke-width:1;"/><line x1="828.36" y1="138.03" x2="836.36" y2="138.03" style="stroke:#181818;stroke-width:1;"/><line x1="832.36" y1="139.03" x2="832.36" y2="131.03" style="stroke:#181818;stroke-width:1;"/><line x1="846.09" y1="236.52" x2="854.09" y2="230.52" style="stroke:#181818;stroke-width:1;"/><line x1="846.09" y1="236.52" x2="854.09" y2="242.52" style="stroke:#181818;stroke-width:1;"/><line x1="846.09" y1="236.52" x2="854.09" y2="236.52" style="stroke:#181818;stroke-width:1;"/><ellipse cx="840.09" cy="236.52" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="808.36" y="207.707" fill="#000" font-size="13" textLength="23.816">где</text></g><!--link workout to booking--><g class="link" data-entity-1="ent0011" data-entity-2="ent0012" id="lnk26" data-source-line="169" data-link-type="crowfoot"><path d="M846.03,384.52 C793.28,384.52 743.7,384.52 743.7,384.52 C743.7,384.52 743.7,412.91 743.7,454.04" style="stroke:#181818;stroke-width:1;" fill="none" id="workout-booking" codeLine="169"/><line x1="850.03" y1="380.52" x2="850.03" y2="388.52" style="stroke:#181818;stroke-width:1;"/><line x1="847.03" y1="380.52" x2="847.03" y2="388.52" style="stroke:#181818;stroke-width:1;"/><line x1="846.03" y1="384.52" x2="854.03" y2="384.52" style="stroke:#181818;stroke-width:1;"/><line x1="743.7" y1="464.04" x2="749.7" y2="472.04" style="stroke:#181818;stroke-width:1;"/><line x1="743.7" y1="464.04" x2="737.7" y2="472.04" style="stroke:#181818;stroke-width:1;"/><line x1="743.7" y1="464.04" x2="743.7" y2="472.04" style="stroke:#181818;stroke-width:1;"/><ellipse cx="743.7" cy="458.04" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="679.11" y="397.587" fill="#000" font-size="13" textLength="75.816">на занятие</text></g><!--link client to booking--><g class="link" data-entity-1="ent0001" data-entity-2="ent0012" id="lnk27" data-source-line="170" data-link-type="crowfoot"><path d="M659.71,147.17 C659.71,234.46 659.71,366.46 659.71,453.87" style="stroke:#181818;stroke-width:1;" fill="none" id="client-booking" codeLine="170"/><line x1="655.71" y1="143.17" x2="663.71" y2="143.17" style="stroke:#181818;stroke-width:1;"/><line x1="655.71" y1="146.17" x2="663.71" y2="146.17" style="stroke:#181818;stroke-width:1;"/><line x1="659.71" y1="147.17" x2="659.71" y2="139.17" style="stroke:#181818;stroke-width:1;"/><line x1="659.71" y1="463.87" x2="665.71" y2="471.87" style="stroke:#181818;stroke-width:1;"/><line x1="659.71" y1="463.87" x2="653.71" y2="471.87" style="stroke:#181818;stroke-width:1;"/><line x1="659.71" y1="463.87" x2="659.71" y2="471.87" style="stroke:#181818;stroke-width:1;"/><ellipse cx="659.71" cy="457.87" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="563.71" y="318.587" fill="#000" font-size="13" textLength="95.405">записывается</text></g><!--link client to pack--><g class="link" data-entity-1="ent0001" data-entity-2="ent0013" id="lnk28" data-source-line="172" data-link-type="crowfoot"><path d="M679.76,135.52 C696.33,135.52 701.11,135.52 701.11,135.52 C701.11,135.52 701.11,173.02 701.11,221.36" style="stroke:#181818;stroke-width:1;" fill="none" id="client-pack" codeLine="172"/><line x1="675.76" y1="139.52" x2="675.76" y2="131.52" style="stroke:#181818;stroke-width:1;"/><line x1="678.76" y1="139.52" x2="678.76" y2="131.52" style="stroke:#181818;stroke-width:1;"/><line x1="679.76" y1="135.52" x2="671.76" y2="135.52" style="stroke:#181818;stroke-width:1;"/><line x1="701.11" y1="231.36" x2="707.11" y2="239.36" style="stroke:#181818;stroke-width:1;"/><line x1="701.11" y1="231.36" x2="695.11" y2="239.36" style="stroke:#181818;stroke-width:1;"/><line x1="701.11" y1="231.36" x2="701.11" y2="239.36" style="stroke:#181818;stroke-width:1;"/><ellipse cx="701.11" cy="225.36" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="636.11" y="168.837" fill="#000" font-size="13" textLength="64.035">покупает</text></g><!--link trainer to pack--><g class="link" data-entity-1="ent0007" data-entity-2="ent0013" id="lnk29" data-source-line="173" data-link-type="crowfoot"><path d="M871.57,77.52 C854.58,77.52 849.39,77.52 849.39,77.52 C849.39,77.52 849.39,286.52 849.39,286.52 C849.39,286.52 854.55,286.52 837.99,286.52" style="stroke:#181818;stroke-width:1;" fill="none" id="trainer-pack" codeLine="173"/><line x1="875.57" y1="73.52" x2="875.57" y2="81.52" style="stroke:#181818;stroke-width:1;"/><line x1="872.57" y1="73.52" x2="872.57" y2="81.52" style="stroke:#181818;stroke-width:1;"/><line x1="871.57" y1="77.52" x2="879.57" y2="77.52" style="stroke:#181818;stroke-width:1;"/><line x1="827.99" y1="286.52" x2="819.99" y2="292.52" style="stroke:#181818;stroke-width:1;"/><line x1="827.99" y1="286.52" x2="819.99" y2="280.52" style="stroke:#181818;stroke-width:1;"/><line x1="827.99" y1="286.52" x2="819.99" y2="286.52" style="stroke:#181818;stroke-width:1;"/><ellipse cx="833.99" cy="286.52" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="780.39" y="177.697" fill="#000" font-size="13" textLength="68.364">у тренера</text></g><!--link pack to slot--><g class="link" data-entity-1="ent0013" data-entity-2="ent0014" id="lnk30" data-source-line="174" data-link-type="crowfoot"><path d="M827.83,333.52 C845.75,333.52 851.95,333.52 851.95,333.52 C851.95,333.52 851.95,395.15 851.95,454.1" style="stroke:#181818;stroke-width:1;" fill="none" id="pack-slot" codeLine="174"/><line x1="823.83" y1="337.52" x2="823.83" y2="329.52" style="stroke:#181818;stroke-width:1;"/><line x1="826.83" y1="337.52" x2="826.83" y2="329.52" style="stroke:#181818;stroke-width:1;"/><line x1="827.83" y1="333.52" x2="819.83" y2="333.52" style="stroke:#181818;stroke-width:1;"/><line x1="851.95" y1="464.1" x2="857.95" y2="472.1" style="stroke:#181818;stroke-width:1;"/><line x1="851.95" y1="464.1" x2="845.95" y2="472.1" style="stroke:#181818;stroke-width:1;"/><line x1="851.95" y1="464.1" x2="851.95" y2="472.1" style="stroke:#181818;stroke-width:1;"/><ellipse cx="851.95" cy="458.1" rx="4" ry="4" fill="none" style="stroke:#181818;stroke-width:1;"/><text x="764.95" y="399.817" fill="#000" font-size="13" textLength="86.233">расходуется</text></g><?plantuml-src fLXRRnD757xthnYPXq0XjC-MUAYgLgfKgagepzR4dk1LrZlkxXWtNAIGGAa4QbBA9U8I0ghK1wWm1XEJYv7u1RD_eR-atpcpQ-_QNa94fDWpPywS-SvrpdXEdFcClzASi8_iqBwnVRiNtn8OTEs1FOXlnjT5VDNsunNRimECkYA-Xi4gLllnrNcx2_ur-mhq3y_jttO8ndtR_R174XzZkcgxyM_Oi2w-2NLdBXBVQMqW4dnz-mRVgn3SnPw1-CcNWVdvx0-dQUzjks7lGS9MHU2C8HZsiU60vQtOWNqdR6-qGm1DDxu1Chw1QnLort68mEmzGE0KR1e2UPTaFxDRzg5zOH_OBPAIRExQFTiNAIyE7PmMO2auca4TGBNy5Zvqbos9ZNHOBxvfT_3VSyZ4kUN0o5_5js6eGz9KYCkNXVXlvOvW6JsW6GeM06tSkdRhjEAyCm3KmOX978TVUl4wZhb5J7qilA8fyAuwXvAA9rYOlbGWR9yfh-sGsRuG2TiiKKCeJNObWp7tiPIxns7nEpxPJ1GSVyGtmFDPmLbgU7KbQbvOyrKfMlA2bWnbK_XUeCnoImaTceREBDHy6KLV6nDw2ssZlg_fu9ntKOclCYnHGzPrnmlEYqNfHwfK194YuA7Tj7SHYi_iSs4tXRt3inVsBqmA0Al0U6PPb6k-Xs5Po4YueRXK8kDwTL4HNc0mcP_7nsBRzwk1R2gGByYmrf0XgAs63l8KrPIUdwD4Hffsb25ToPokcoqPBBlZtRZW_AcZlI38oqGaFxLFx3RIyZRIvnzOODC-g526xIByroXzN9mXyxXMh7Ao7535I387-OS07y5hgkQ22gE6rwgI6nbcantwYI1ReLSZIbtLlARqGRdWHPwf-bxJCwEzncigHweQ3IhDoUIXKXTLjIwNesfBXTLb9SDaZrFtNxZ-Fbpz26e_j2_jDbKYAFgUmfwAerDrbtGZ3QbE3kc3Wd_V5IqHhu6mntcDZ9YXkjCQqmAbZoM1Kyqi74kzcITEs3Ex-5cMGeY59gfgYeYwD4HIGJrF-5WO9fQ6aJrTPtqTfL3ZZ2APnSDXEB_TWyrN-2BO4nIPF1d07ttoqWWL6u3HyEX8vfyD46mgLFMgD0cWn7w-MZGJn2iVAJYKOfHgc_ZSu3IxosNdFcQEUcZPCQ54RGnPksHyfCBpCMzsTBYassQSifrFJrdde6suPeVkVrmKVVODtQ7k1iDDX3uYlOkmGXt6S3v3sKTlCQ5dTGgJwHGxDDsKysXMmdWbetP3-ZwBfa61x9hVNiYAdR9hJRPaZSHbwynzQhNYTGGd6s85zUGgYWmtMsGT59apN57j6t5IS5djypMxWYdTp8ZpazHd47q_Nf_qb7EI6nSQPRR-XUOY8yp8pSd8dz1tTc3D9TIAMD1wITN5bq8QWzJcOKq6DUNxF0vqDMhepaX1uiSLpWecuqCLp9VHgToU0WWbGWMDwaV8u2UuDRQHfrl8tWtkD1_RvvJ5pq2-ooczZSNRk60EJMLKpKW7qg_2aalol0jl6X-fOCrmOgIYoDD1X59lf3zDRaUg-FwuCWDWv6iNQpGeH9UeSJYysH4rEu0A_F0K9dw9_2eqSjAJKGi-Fu_EcE_XYYXpS-lkUcxQowMqVK8pdkSSSZ_W7X-zbDjrCRFbPhgXU0sij9HXJQv6OjxXTn6zgBhsxLWylMtAKz3T9SPdy5FdkdiTC9g98qQiQPqPlqxAfL9wNwJSAAMbpeG-isXfXI48kzGL0i2xf6wLfwJck66H8N7IW_1F0i4rja3sQtgabaifAML9yvzOgETawutAwhIzilmx_4pC6S8PUMeN9zxC09bKCEMCrt8bstRB9LxAQCVvGgnS-ftd87gC8j160R0nkYdq8aSJKW7XxJfD817q4ANdkg0dQAxdh81r77ByRYDxepTDdhNhwKcdI6Wtsz6wi2EVy3x1iTK7bGz62QWBmZQ5aEA30QQlqhEL7olvgsliRkBa7nCuPEWHiUl2OS2Fw1x3SjTViccDy4nloTdPFJGAy9758RKTUB-qbJW-BZ-dndNd11aE27eKnscppxd5FuwyTGt_dlk9Wsny3H3Hlw0IE603znQd_Jli9J9RTmJgVm00?></g></svg></div>
+
+<script>
+"use strict";
+function el(h){const t=document.createElement("template");t.innerHTML=h.trim();return t.content.firstChild}
+
+/* ==== модель: у каждой таблицы и поля указан шаг появления ==== */
+const T=[
+ {n:"client", kind:"ref", at:4, f:[
+   ["id","int",4,"pk"],["full_name","varchar",4],["phone","varchar",4],["email","varchar",4],["status","varchar",9]]},
+ {n:"company", kind:"ref", at:4, f:[
+   ["id","int",4,"pk"],["name","varchar",4],["inn","varchar",4]]},
+ {n:"membership_type", kind:"ref", at:4, f:[
+   ["id","int",4,"pk"],["name","varchar",4],["price","decimal",4],["visit_limit","int",4],["time_limit_to","time",4]]},
+ {n:"membership", kind:"inst", at:4, f:[
+   ["id","int",4,"pk"],["client_id","int",5,"fk"],["membership_type_id","int",5,"fk"],
+   ["company_id","int",5,"fk"],["price","decimal",7],["visit_limit","int",7],["time_limit_to","time",7],
+   ["starts_on","date",4],["ends_on","date",4],["status","varchar",4]]},
+ {n:"trainer", kind:"ref", at:4, f:[
+   ["id","int",4,"pk"],["full_name","varchar",4],["status","varchar",9]]},
+ {n:"workout_type", kind:"ref", at:4, f:[
+   ["id","int",4,"pk"],["name","varchar",4]]},
+ {n:"hall", kind:"ref", at:4, f:[
+   ["id","int",4,"pk"],["name","varchar",4],["capacity","int",4]]},
+ {n:"workout", kind:"inst", at:4, f:[
+   ["id","int",4,"pk"],["workout_type_id","int",5,"fk"],["trainer_id","int",5,"fk"],["hall_id","int",5,"fk"],
+   ["starts_at","datetime",4],["capacity","int",4],["status","varchar",4]]},
+ {n:"personal_package", kind:"inst", at:4, f:[
+   ["id","int",4,"pk"],["client_id","int",5,"fk"],["trainer_id","int",5,"fk"],
+   ["sessions_total","int",4],["sessions_used","int",4],["price","decimal",7]]},
+ {n:"trainer_workout_type", kind:"link", at:6, f:[
+   ["id","int",6,"pk"],["trainer_id","int",6,"fk"],["workout_type_id","int",6,"fk"]]},
+ {n:"visit", kind:"inst", at:8, f:[
+   ["id","int",8,"pk"],["client_id","int",8,"fk"],["membership_id","int",8,"fk"],
+   ["entered_at","datetime",8],["left_at","datetime",8]]},
+ {n:"booking", kind:"inst", at:8, f:[
+   ["id","int",8,"pk"],["workout_id","int",8,"fk"],["client_id","int",8,"fk"],
+   ["status","varchar",8],["created_at","datetime",8]]},
+ {n:"freeze_period", kind:"inst", at:8, f:[
+   ["id","int",8,"pk"],["membership_id","int",8,"fk"],["starts_on","date",8],["ends_on","date",8]]},
+ {n:"personal_slot", kind:"inst", at:8, f:[
+   ["id","int",8,"pk"],["package_id","int",8,"fk"],["trainer_id","int",8,"fk"],
+   ["starts_at","datetime",8],["status","varchar",8]]}
+];
+
+const R=[
+ {a:"client",b:"membership",c:"1 : N",at:5,note:"карт много во времени"},
+ {a:"membership_type",b:"membership",c:"1 : N",at:5,note:"справочник → экземпляры"},
+ {a:"company",b:"membership",c:"0..1 : N",at:5,note:"плательщика может не быть"},
+ {a:"workout_type",b:"workout",c:"1 : N",at:5,note:"какой вид"},
+ {a:"trainer",b:"workout",c:"1 : N",at:5,note:"кто ведёт"},
+ {a:"hall",b:"workout",c:"1 : N",at:5,note:"где"},
+ {a:"client",b:"personal_package",c:"1 : N",at:5,note:"кто купил"},
+ {a:"trainer",b:"personal_package",c:"1 : N",at:5,note:"у кого купил"},
+ {a:"trainer",b:"workout_type",c:"M : N",at:5,mn:true,note:"пока не разрешена!"},
+ {a:"trainer",b:"trainer_workout_type",c:"1 : N",at:6,note:"разрешение M:N"},
+ {a:"workout_type",b:"trainer_workout_type",c:"1 : N",at:6,note:"разрешение M:N"},
+ {a:"membership",b:"freeze_period",c:"1 : N",at:8,note:"периоды заморозки"},
+ {a:"client",b:"visit",c:"1 : N",at:8,note:"кто прошёл"},
+ {a:"membership",b:"visit",c:"1 : N",at:8,note:"по какой карте"},
+ {a:"workout",b:"booking",c:"1 : N",at:8,note:"на занятие"},
+ {a:"client",b:"booking",c:"1 : N",at:8,note:"кто записался"},
+ {a:"personal_package",b:"personal_slot",c:"1 : N",at:8,note:"расход пакета"}
+];
+
+const C=[
+ {t:"UNIQUE (trainer_id, starts_at)", w:"слот персоналки нельзя продать дважды — закрывает боль заказчика", at:9},
+ {t:"UNIQUE (workout_id, client_id)", w:"один клиент — одна запись на занятие", at:9},
+ {t:"UNIQUE (client_id) WHERE status = 'active'", w:"не более одной активной карты; частичный индекс, а не связь 1:1", at:9},
+ {t:"CHECK (ends_on - starts_on >= 7)", w:"период заморозки не короче недели", at:9},
+ {t:"FK ... ON DELETE RESTRICT", w:"тренера и клиента с историей физически не удалить", at:9}
+];
+
+const CAND=[
+ {w:"клиент",keep:1},{w:"компания",keep:1},{w:"абонемент",keep:1},{w:"тип абонемента",keep:1},
+ {w:"посещение",keep:1},{w:"занятие",keep:1},{w:"вид занятия",keep:1},{w:"тренер",keep:1},
+ {w:"зал",keep:1},{w:"запись",keep:1},{w:"заморозка",keep:1},{w:"пакет персоналок",keep:1},{w:"слот",keep:1},
+ {w:"цена",keep:0,r:"атрибут"},{w:"QR-код",keep:0,r:"атрибут"},{w:"вместимость",keep:0,r:"атрибут зала"},
+ {w:"неявка",keep:0,r:"статус записи"},{w:"блокировка",keep:0,r:"правило"},
+ {w:"«2 часа»",keep:0,r:"правило"},{w:"«30 дней в году»",keep:0,r:"правило"},{w:"турникет",keep:0,r:"железо"}
+];
+
+const EVENTS=[
+ ["Уволился тренер","status = 'dismissed', история цела"],
+ ["Подорожал тариф","одна строка справочника, карты не тронуты"],
+ ["Третья неявка подряд","booking.status = 'no_show' + блокировка"],
+ ["Клуб отменил занятие","workout.status = 'cancelled', списания возвращены"],
+ ["Переименовали направление","одна строка workout_type"],
+ ["Запрос на удаление ПДн","анонимизация полей, строки на месте"]
+];
+
+const ASSUMPTIONS=[
+ "Неиспользованные посещения пакета сгорают в конце срока",
+ "Карта именная и не передаётся другому человеку",
+ "Слот персональной тренировки — 60 минут",
+ "Судьба будущих занятий и пакетов уволенного тренера — уточнить у заказчика"
+];
+
+const STEPS=[
+{t:"Требования", h:"Вход: не пустой лист, а слова заказчика", body:`
+<p>Модель данных не придумывается — она <b>выводится из требований</b>. К этому моменту у нас есть 12 фраз с интервью: сколько карт у человека, какие бывают абонементы, что происходит при неявке, кто платит за корпоративные карты, можно ли вернуть деньги, и боль «два клиента купили один слот».</p>
+<div class="qself"><b>Вопрос себе</b>Что мне на самом деле сказал заказчик? Всё, что я добавлю сверх этого, станет допущением — и его придётся записать.</div>
+<div class="why"><b>Почему это важно</b>Модель, придуманная «из головы», всегда оказывается либо избыточной, либо неспособной ответить на вопросы бизнеса. Требование — единственный источник правды.</div>`},
+
+{t:"Существительные", h:"Шаг 1. Выписать всё, что похоже на объект", body:`
+<p>Читаем требования и выписываем существительные — широко, без фильтра. На этом шаге не думаем, что войдёт в модель: важно ничего не потерять.</p>
+<p>Получился список из 21 кандидата — справа. Часть из них станет таблицами, часть отсеется на следующем шаге.</p>
+<div class="qself"><b>Вопрос себе</b>Какие объекты вообще упоминались в разговоре?</div>
+<div class="why"><b>Почему сначала широко</b>Забытая на этом шаге сущность всплывает уже в разработке, когда схему менять дорого. Лишнее убрать легко, недостающее — нет.</div>`},
+
+{t:"Отсев", h:"Шаг 2. Убрать то, что сущностью не является", body:`
+<p>Каждого кандидата допрашиваем тремя вопросами. Если ответ «нет» — вычёркиваем и помечаем, чем он на самом деле является:</p>
+<ul>
+  <li><b>Можно завести строку с атрибутами?</b> У цены и QR-кода своих атрибутов нет → это поля.</li>
+  <li><b>Это объект, а не поведение?</b> «2 часа до начала», «30 дней в году», блокировка → это правила, они живут в процессе.</li>
+  <li><b>Это про данные, а не про железо?</b> Турникет — устройство; данные, которые он порождает, назовём позже.</li>
+</ul>
+<div class="qself"><b>Отдельная ловушка</b>«Неявка» кажется объектом. Но неявки самой по себе не бывает — она всегда неявка <b>на конкретную запись</b>. Значит, это статус записи.</div>
+<div class="why"><b>Почему это критично</b>Каждая лишняя сущность — это лишняя таблица, лишние джойны и лишние баги. А правило, записанное как таблица, невозможно проверить.</div>`},
+
+{t:"Справочники", h:"Шаг 3. Развилка, которая определяет всю модель", body:`
+<p>Оставшихся кандидатов делим надвое одним вопросом: <b>«у этого есть дата, когда оно случилось?»</b></p>
+<ul>
+  <li><b>Нет</b> → это <b>справочник</b>: каталог того, что бывает. Тариф «Безлимит», направление «Йога», зал, тренер.</li>
+  <li><b>Да</b> → это <b>экземпляр</b>: факт со временем. Карта Ивана от 3 мая, йога в пятницу 19:00, проход в 8:12.</li>
+</ul>
+<div class="qself"><b>Вопрос себе</b>Это каталог, из которого выбирают, — или событие, которое случилось?</div>
+<div class="why"><b>Почему шаг ключевой</b>Отсюда сразу следуют связи «справочник → экземпляры» (всегда 1:N). И главное — становится видно, где на шаге 7 понадобятся снимки: цена живёт в справочнике, а фиксироваться должна в экземпляре.</div>`},
+
+{t:"Таблицы", h:"Шаг 4. Первый черновик: таблицы, поля, ключи", body:`
+<p>Справа появились первые таблицы. У каждой — суррогатный первичный ключ <code>id</code> и минимальный набор полей. Имена по конвенции: единственное число, <code>snake_case</code>.</p>
+<p>Связей пока нет — это ещё не модель, а заготовки. Обратите внимание: <code>membership</code> и <code>workout</code> помечены как экземпляры, остальные — справочники.</p>
+<div class="qself"><b>Вопрос себе</b>Какие поля нужны минимально, чтобы объект имел смысл?</div>
+<div class="why"><b>Почему суррогатный id</b>Естественный ключ (телефон, email, ФИО) меняется — и тогда придётся править все ссылки на него. Числовой <code>id</code> не меняется никогда.</div>`},
+
+{t:"Связи", h:"Шаг 5. Связи: читаем каждую пару с двух сторон", body:`
+<p>Здесь заготовки впервые становятся моделью. Механика на каждую пару — два вопроса:</p>
+<ul>
+  <li>«Сколько карт у одного клиента?» — много. «Сколько клиентов у одной карты?» — один → <b>1:N</b></li>
+  <li>«Сколько карт оплачивает компания?» — много. «Сколько плательщиков у карты?» — <b>ноль или один</b> → <b>0..1 : N</b></li>
+  <li>«Сколько видов ведёт тренер?» — много. «Сколько тренеров у вида?» — тоже много → <b>M:N</b>, она подсвечена красным</li>
+</ul>
+<p>В таблицах-экземплярах появились внешние ключи (жёлтые) — это и есть материализация связей.</p>
+<div class="why"><b>Главная ловушка шага</b>Заказчик сказал «действующая карта одна» — и рука тянется нарисовать 1:1. Но кардинальность отвечает, сколько строк может быть <b>вообще</b>, а карт за годы много. «Одна активная» — ограничение на подмножество строк, оно появится на шаге 9.</div>`},
+
+{t:"M:N", h:"Шаг 6. Единственная M:N расщепляется", body:`
+<p>Связь «тренер ↔ вид занятия» в реляционной базе не существует напрямую. Она превращается в <b>связующую таблицу</b> с двумя внешними ключами — справа появилась <code>trainer_workout_type</code>.</p>
+<p>Одна связь M:N стала двумя связями 1:N. Это <b>первая таблица, которую породил не заказчик, а метод</b>: в требованиях её не было ни в каком виде.</p>
+<div class="qself"><b>Вопрос себе</b>Где «много» с обеих сторон? Туда — связующая таблица.</div>
+<div class="why"><b>Что это даёт разработке</b>Появляется простой запрос «кто может вести кроссфит» — обычный JOIN. И выпадающий список тренеров при создании занятия фильтруется по этой таблице: администратор физически не поставит Аню на кроссфит. Через поле-строку обе задачи нерешаемы.</div>`},
+
+{t:"Снимки", h:"Шаг 7. Историчность: модель раздваивает цену", body:`
+<p>Ищем в требованиях маркер «<b>даже если потом изменили</b>». Находим: «купленная карта живёт по условиям на момент покупки». Значит, в <code>membership</code> появляются поля-двойники из справочника — они подсвечены справа.</p>
+<p>Формально это дублирование. Но без него подорожание тарифа в понедельник переоценит все проданные карты задним числом, и возврат посчитается от новой цены.</p>
+<div class="qself"><b>Вопрос себе</b>Что из этого меняется со временем — и что должно остаться зафиксированным на момент сделки?</div>
+<div class="why"><b>Бизнес побеждает нормализацию</b>Это тот редкий случай, когда осознанное дублирование правильно. Тот же приём: тариф поездки в каршеринге, цена блюда в доставке, цена билета в кино.</div>`},
+
+{t:"Журналы", h:"Шаг 8. Из слов «фиксируем каждый раз» — таблицы фактов", body:`
+<p>Каждое такое требование превращается в журнал. Справа появились четыре таблицы: <code>visit</code>, <code>booking</code>, <code>freeze_period</code>, <code>personal_slot</code>.</p>
+<p>Два тонких решения именно здесь:</p>
+<ul>
+  <li><b><code>visit</code> цепляется не только к клиенту, но и к карте.</b> Иначе при пяти картах в истории не посчитать ни списание пакета, ни пропорциональный возврат.</li>
+  <li><b>У <code>booking</code> обязателен <code>status</code>.</b> Он хранит <code>no_show</code> — и только на нём держится правило «три неявки подряд».</li>
+</ul>
+<div class="why"><b>Проверка на выживание требований</b>Не было бы статуса у записи — правило из интервью оказалось бы нереализуемым, и никто бы этого не заметил до продакшна. Всё, что не попало в модель, в системе не появится.</div>`},
+
+{t:"Ограничения", h:"Шаг 9. То, что структурой не выражается", body:`
+<p>Схема готова — теперь добавляем гарантии. Справа появился блок ограничений, а у <code>client</code> и <code>trainer</code> — поле <code>status</code> для мягкого удаления.</p>
+<p>Именно здесь закрывается боль заказчика: <code>UNIQUE (trainer_id, starts_at)</code> делает двойную продажу слота <b>физически невозможной</b>.</p>
+<div class="qself"><b>Вопрос себе</b>Что в этой системе не должно случиться никогда — и кто это гарантирует?</div>
+<div class="why"><b>Почему не проверка в коде</b>Между «прочитали, что слот свободен» и «вставили запись» проходит время: две параллельные транзакции обе решат, что место есть. Гарантию даёт база, а не аккуратность кода.</div>`},
+
+{t:"Проверка", h:"Шаг 10. Прогнать модель через реальные события", body:`
+<p>Модель готова — теперь её ломают. Берём события из жизни клуба и проверяем, выразимы ли они без переделки схемы. Результат — справа.</p>
+<div class="qself"><b>Вопрос себе</b>Что произойдёт с данными, если… уволится? подорожает? отменят? попросят удалить?</div>
+<div class="why"><b>Зачем это делать до разработки</b>Ошибка модели, найденная сейчас, стоит десять минут. Найденная после запуска — это миграция живой базы с накопленными данными и простой сервиса.</div>`},
+
+{t:"Допущения", h:"Шаг 11. Записать всё, что решили сами", body:`
+<p>Последний шаг — честный список того, чего заказчик не говорил, но без чего модель не собиралась. Справа четыре штуки.</p>
+<p>Каждое допущение — это вопрос на следующую встречу, а не окончательное решение.</p>
+<div class="qself"><b>Правило практикума</b>Записанное допущение ошибкой не считается. Молчаливое — считается.</div>
+<div class="why"><b>Итог</b>Требования диктуют существительные → существительные проходят фильтр → выжившие делятся на справочники и факты → связи читаются с двух сторон → «много-много» расщепляется → «даже если изменили» превращается в снимок → «фиксируем каждый раз» — в журнал → «так не должно быть никогда» — в ограничение.</div>`},
+
+{t:"Готовая схема", h:"Итог: та самая диаграмма, которую вы построили", body:`
+<p>Справа — финальная ERD целиком, отрисованная из кода PlantUML. Всё, что вы собирали одиннадцать шагов, теперь на одном листе. Схема шире экрана — её можно прокручивать вбок.</p>
+
+<h4 style="margin:16px 0 6px; font-size:14px">Как читать эту схему — по порядку</h4>
+<ol>
+  <li><b>Найдите справочники.</b> <code>membership_type</code>, <code>workout_type</code>, <code>hall</code> — от них стрелки идут наружу, а внутрь почти ничего не входит. Это каталоги: они описывают, что бывает.</li>
+  <li><b>Найдите экземпляры.</b> <code>membership</code>, <code>workout</code>, <code>booking</code>, <code>visit</code> — в них входит много связей и есть поля с датами. Это факты: что случилось и когда.</li>
+  <li><b>Прочитайте одну связь вслух.</b> Возьмите <code>client ||--o{ membership</code>: две палочки у клиента — «ровно один», лапка у карты — «много». Читается: «у клиента ноль или много карт, у карты ровно один клиент».</li>
+  <li><b>Найдите необязательную связь.</b> У <code>company</code> к <code>membership</code> кружок: плательщика может не быть, обычную карту покупает сам клиент.</li>
+  <li><b>Найдите связующую таблицу.</b> <code>trainer_workout_type</code> стоит между тренером и видом занятия, и в неё входят две связи «один-ко-многим». Это разрешённая M:N — единственная в модели.</li>
+  <li><b>Найдите снимки.</b> В <code>membership</code> есть <code>price</code> и <code>visit_limit</code> — те же поля, что в справочнике тарифов. Это не ошибка: цена зафиксирована на момент покупки.</li>
+  <li><b>Найдите журналы.</b> <code>visit</code>, <code>booking</code>, <code>freeze_period</code>, <code>personal_slot</code> — таблицы, куда система пишет каждый факт: проход, запись, заморозку, тренировку.</li>
+  <li><b>Прочитайте заметки.</b> Три жёлтых примечания на схеме отмечают самые «дорогие» решения: снимок цены, разрешение M:N и уникальность слота.</li>
+</ol>
+
+<div class="qself"><b>Проверьте себя</b>Покажите пальцем, где на схеме живёт требование «после трёх неявок блокируем на неделю». Подсказка: ищите поле, в котором хранится результат каждой записи.</div>
+<div class="why"><b>Что дальше</b>Эта схема — вход в работу разработчика: каждая таблица станет миграцией БД, каждая связь — внешним ключом, каждое ограничение — защитой от неверных данных. Всё, чего на схеме нет, в системе не появится.</div>`}
+];
+
+let s=0;
+const MAXS=STEPS.length-1;
+
+function rail(){
+  const r=document.getElementById("rail"); r.innerHTML="";
+  STEPS.forEach((st,i)=>{
+    const b=el('<button class="rb '+(i===s?"act":"")+' '+(i<s?"done":"")+'" type="button"><span class="rn">'+(i===0?"вход":"шаг "+i)+'</span><span class="rt">'+st.t+'</span></button>');
+    b.addEventListener("click",()=>{s=i;draw()});
+    r.appendChild(b);
+  });
+}
+
+function drawLeft(){
+  const L=document.getElementById("left"); L.innerHTML="";
+  const st=STEPS[s];
+  const p=el('<div class="panel"></div>');
+  p.appendChild(el('<div class="stepno">'+(s===0?"Точка отсчёта":"Шаг "+s+" из "+MAXS)+'</div>'));
+  p.appendChild(el('<h2>'+st.h+'</h2>'));
+  const body=el('<div></div>'); body.innerHTML=st.body; p.appendChild(body);
+  const nav=el('<div class="nav"></div>');
+  const prev=el('<button class="nb ghost" type="button">← Назад</button>');
+  const next=el('<button class="nb" type="button">'+(s===MAXS?"В начало ⟲":"Дальше →")+'</button>');
+  prev.disabled=(s===0);
+  prev.addEventListener("click",()=>{if(s>0){s--;draw()}});
+  next.addEventListener("click",()=>{ s=(s===MAXS)?0:s+1; draw(); });
+  nav.appendChild(prev); nav.appendChild(next);
+  nav.appendChild(el('<span class="kbd">← → на клавиатуре</span>'));
+  p.appendChild(nav);
+  L.appendChild(p);
+}
+
+function drawRight(){
+  const R2=document.getElementById("right"); R2.innerHTML="";
+
+  if(s===MAXS){
+    const p=el('<div class="panel"></div>');
+    p.appendChild(el('<div class="mhead"><h3>Финальная ERD</h3><span class="cnt">14 таблиц · PlantUML</span></div>'));
+    const holder=el('<div class="svgbox"></div>');
+    holder.innerHTML=document.getElementById("erdsrc").innerHTML;
+    p.appendChild(holder);
+    p.appendChild(el('<p class="hint">Схема прокручивается вбок. Исходный код — в файле ERD_Фитнес-клуб.puml, его можно открыть на plantuml.com и менять под свой кейс.</p>'));
+    R2.appendChild(p);
+    return;
+  }
+
+  if(s===0){
+    R2.appendChild(el('<div class="panel"><div class="empty">Модели пока нет — есть только слова заказчика.<br>Нажмите «Дальше», и она начнёт собираться.</div></div>'));
+    return;
+  }
+
+  /* кандидаты — шаги 1..3 */
+  if(s>=1&&s<=3){
+    const p=el('<div class="panel"></div>');
+    p.appendChild(el('<div class="mhead"><h3>Кандидаты в сущности</h3><span class="cnt">'+(s===1?CAND.length+" выписано":CAND.filter(c=>c.keep).length+" из "+CAND.length+" осталось")+'</span></div>'));
+    const box=el('<div class="cands"></div>');
+    CAND.forEach(c=>{
+      let cls="cd", extra="";
+      if(s>=2){ cls+=c.keep?" keep":" cut"; if(!c.keep) extra='<span class="rs">'+c.r+'</span>'; }
+      box.appendChild(el('<span class="'+cls+'">'+c.w+extra+'</span>'));
+    });
+    p.appendChild(box);
+    if(s===3){
+      p.appendChild(el('<div class="legend"><span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>справочник — что бывает</span><span><i style="background:var(--amber-soft);border:1px solid var(--amber)"></i>экземпляр — что случилось</span></div>'));
+      const sp=el('<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px"></div>');
+      sp.appendChild(el('<div><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px">Справочники</div><div style="font:12px Consolas,monospace;line-height:1.8">client<br>company<br>membership_type<br>workout_type<br>trainer<br>hall</div></div>'));
+      sp.appendChild(el('<div><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px">Экземпляры (есть дата)</div><div style="font:12px Consolas,monospace;line-height:1.8">membership<br>workout<br>visit<br>booking<br>freeze_period<br>personal_slot</div></div>'));
+      p.appendChild(sp);
+    }
+    R2.appendChild(p);
+    if(s<4) return;
+  }
+
+  /* таблицы */
+  const tables=T.filter(t=>t.at<=s);
+  if(tables.length){
+    const p=el('<div class="panel"></div>');
+    const isNewCnt=tables.filter(t=>t.at===s).length;
+    p.appendChild(el('<div class="mhead"><h3>Модель данных</h3><span class="cnt">'+tables.length+' таблиц'+(isNewCnt?' · +'+isNewCnt+' на этом шаге':'')+'</span></div>'));
+    const g=el('<div class="grid"></div>');
+    tables.forEach(t=>{
+      const nw=(t.at===s);
+      const badge = t.kind==="ref"?'<span class="badge">справочник</span>':(t.kind==="link"?'<span class="badge link">связующая</span>':'<span class="badge inst">экземпляр</span>');
+      const box=el('<div class="tbl '+(nw?"isnew":"")+'"><div class="tn">'+t.n+badge+'</div></div>');
+      t.f.filter(f=>f[2]<=s).forEach(f=>{
+        const key=f[3]==="pk"?'<span class="k">PK</span>':(f[3]==="fk"?'<span class="k fk">FK</span>':'<span class="k"></span>');
+        box.appendChild(el('<div class="fl '+(f[2]===s&&!nw?"isnew":"")+'">'+key+'<span>'+f[0]+'</span><span class="ty">'+f[1]+'</span></div>'));
+      });
+      g.appendChild(box);
+    });
+    p.appendChild(g);
+    p.appendChild(el('<div class="legend"><span><i style="background:var(--ok-soft);border:1px solid var(--ok)"></i>новая таблица</span><span><i style="background:var(--amber-soft);border:1px solid var(--amber)"></i>новое поле</span><span><b style="color:var(--accent)">PK</b> первичный ключ</span><span><b style="color:var(--amber)">FK</b> внешний ключ</span></div>'));
+    R2.appendChild(p);
+  }
+
+  /* связи */
+  const rels=R.filter(r=>r.at<=s && !(r.mn && s>=6));
+  if(rels.length){
+    const p=el('<div class="panel"></div>');
+    p.appendChild(el('<div class="mhead"><h3>Связи</h3><span class="cnt">'+rels.length+'</span></div>'));
+    const box=el('<div class="rels"></div>');
+    rels.forEach(r=>{
+      box.appendChild(el('<div class="rel '+(r.at===s?"isnew":"")+'"><span class="card '+(r.mn?"mn":"")+'">'+r.c+'</span><span>'+r.a+' → '+r.b+'</span><span class="note">'+r.note+'</span></div>'));
+    });
+    p.appendChild(box);
+    R2.appendChild(p);
+  }
+
+  /* ограничения */
+  if(s>=9){
+    const p=el('<div class="panel"></div>');
+    p.appendChild(el('<div class="mhead"><h3>Ограничения и правила</h3><span class="cnt">'+C.length+'</span></div>'));
+    const box=el('<div class="cons"></div>');
+    C.forEach(c=>box.appendChild(el('<div class="con"><code>'+c.t+'</code><span class="cw">'+c.w+'</span></div>')));
+    p.appendChild(box);
+    R2.appendChild(p);
+  }
+
+  /* события */
+  if(s>=10){
+    const p=el('<div class="panel"></div>');
+    p.appendChild(el('<div class="mhead"><h3>Прогон событий</h3><span class="cnt">все выразимы</span></div>'));
+    EVENTS.forEach(e=>p.appendChild(el('<div class="evt"><b>✓</b> '+e[0]+' — <span style="color:var(--muted)">'+e[1]+'</span></div>')));
+    R2.appendChild(p);
+  }
+
+  /* допущения */
+  if(s>=11){
+    const p=el('<div class="panel"></div>');
+    p.appendChild(el('<div class="mhead"><h3>Допущения</h3><span class="cnt">'+ASSUMPTIONS.length+'</span></div>'));
+    ASSUMPTIONS.forEach(a=>p.appendChild(el('<div class="asm">'+a+'</div>')));
+    R2.appendChild(p);
+  }
+}
+
+function draw(){ rail(); drawLeft(); drawRight(); window.scrollTo({top:0}); }
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight"&&s<MAXS){s++;draw()}
+  if(e.key==="ArrowLeft"&&s>0){s--;draw()}
+});
+draw();
+</script>
+</body>
+</html>
