@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разбор: ERD и BPMN фитнес-клуба — что куда, как и почему</title>
+<style>
+:root{
+  --bg:#F4F7F5; --surface:#FFFFFF; --surface2:#ECF1EE;
+  --ink:#1A2420; --muted:#5C6B63; --line:#DFE6E1; --diag:#7A8C83;
+  --accent:#147A5E; --accent-ink:#FFFFFF; --accent-soft:#E6F2ED;
+  --amber:#B98A2F; --amber-soft:#F7EFDD;
+  --ok:#177A46; --ok-soft:#E8F5EE; --err:#BE3A2F; --err-soft:#FBEDEB;
+  --code-bg:#EFF3F0; --shadow:0 1px 3px rgba(26,36,32,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111815; --surface:#1A211D; --surface2:#212B25;
+    --ink:#E9F0EC; --muted:#93A69B; --line:#2B3830; --diag:#7E948A;
+    --accent:#4CC9A4; --accent-ink:#0D2019; --accent-soft:#1E332B;
+    --amber:#D9A94A; --amber-soft:#332A18;
+    --ok:#4CC38A; --ok-soft:#18301F; --err:#E5695E; --err-soft:#3A211E;
+    --code-bg:#151C18; --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--bg); color:var(--ink); font:15.5px/1.6 "Segoe UI",-apple-system,system-ui,Roboto,sans-serif}
+.top{background:var(--surface); border-bottom:1px solid var(--line); padding:34px 24px 26px}
+.in{max-width:940px; margin:0 auto}
+.eyebrow{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:6px}
+h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:32px; line-height:1.2; margin-bottom:10px; text-wrap:balance}
+.lead{color:var(--muted); max-width:66ch}
+.back{display:inline-block; margin-top:14px; font-size:13.5px; color:var(--accent); text-decoration:none}
+.back:hover{text-decoration:underline}
+
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+.toc a{font-size:13px; text-decoration:none; color:var(--ink); border:1px solid var(--line); background:var(--surface2); border-radius:20px; padding:5px 13px}
+.toc a:hover{border-color:var(--accent); color:var(--accent)}
+
+main{max-width:940px; margin:0 auto; padding:30px 24px 90px}
+section{margin-bottom:52px; scroll-margin-top:16px}
+h2{font-family:Georgia,serif; font-weight:400; font-size:26px; margin:0 0 6px; text-wrap:balance}
+h2 .num{color:var(--accent); font-size:18px; margin-right:8px}
+h3{font-family:Georgia,serif; font-weight:400; font-size:20px; margin:26px 0 8px}
+h4{font-size:14px; font-weight:600; margin:16px 0 6px}
+p{margin:9px 0; max-width:70ch}
+ul,ol{margin:9px 0 9px 22px; max-width:70ch}
+li{margin:4px 0}
+.sub{color:var(--muted); margin-bottom:16px; max-width:70ch}
+
+.card{border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); padding:18px 20px; margin:16px 0}
+.card.tight{padding:14px 16px}
+.diagwrap{border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); padding:16px; margin:16px 0; overflow-x:auto}
+.diagwrap .cap{font-size:12.5px; color:var(--muted); margin-top:10px}
+svg.diag{display:block; min-width:640px; max-width:100%; height:auto}
+svg.diag .ent{fill:var(--surface2); stroke:var(--diag); stroke-width:1.2; rx:8}
+svg.diag .ent-key{fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.4}
+svg.diag .t{fill:var(--ink); font:600 13px "Segoe UI",sans-serif}
+svg.diag .s{fill:var(--muted); font:11px "Segoe UI",sans-serif}
+svg.diag .rel{stroke:var(--diag); stroke-width:1.4; fill:none}
+svg.diag .rl{fill:var(--muted); font:10.5px "Segoe UI",sans-serif}
+svg.diag marker path{stroke:var(--diag); stroke-width:1.3; fill:none}
+
+table{border-collapse:collapse; width:100%; font-size:14px; margin:12px 0}
+th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; padding:7px 9px; border-bottom:1px solid var(--line)}
+td{padding:8px 9px; border-bottom:1px solid var(--line); vertical-align:top}
+td code,p code,li code{background:var(--code-bg); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font:12.5px Consolas,"Cascadia Mono",monospace}
+.tblwrap{overflow-x:auto}
+tr.chg td{background:var(--amber-soft)}
+tr.new td{background:var(--ok-soft)}
+tr.del td{background:var(--err-soft); text-decoration:line-through; color:var(--muted)}
+.tag{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border-radius:4px; padding:1px 6px; vertical-align:middle}
+.tag.pk{background:var(--accent-soft); color:var(--accent)}
+.tag.fk{background:var(--amber-soft); color:var(--amber)}
+.tag.uq{background:var(--ok-soft); color:var(--ok)}
+
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:9px; padding:14px 16px; font:12.5px/1.55 Consolas,"Cascadia Mono",monospace; overflow-x:auto; margin:12px 0}
+
+/* BPMN */
+.bpx{display:flex; align-items:center; gap:7px; flex-wrap:nowrap; padding:16px; border:1px solid var(--line); border-radius:10px; background:var(--surface2); margin:12px 0; overflow-x:auto}
+.bp-node{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none}
+.bp-cap{font-size:10.5px; color:var(--muted); max-width:104px; text-align:center; line-height:1.25}
+.bp-start{width:26px; height:26px; border:2px solid var(--ink); border-radius:50%; background:var(--surface)}
+.bp-timer{width:26px; height:26px; border:2px solid var(--ink); border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:13px}
+.bp-end{width:26px; height:26px; border:5px solid var(--ink); border-radius:50%; background:var(--surface)}
+.bp-task{border:1.5px solid var(--ink); border-radius:8px; padding:7px 10px; font-size:11.5px; max-width:132px; text-align:center; background:var(--surface); line-height:1.3}
+.bp-gwrap{display:flex; flex-direction:column; align-items:center; gap:5px; flex:none}
+.bp-gw{width:26px; height:26px; border:1.5px solid var(--ink); transform:rotate(45deg); display:flex; align-items:center; justify-content:center; margin:6px; background:var(--surface)}
+.bp-gw span{transform:rotate(-45deg); font-weight:700; font-size:15px}
+.bp-arr{width:26px; height:2px; background:var(--diag); position:relative; flex:none}
+.bp-arr::after{content:''; position:absolute; right:-1px; top:-4px; border-left:7px solid var(--diag); border-top:5px solid transparent; border-bottom:5px solid transparent}
+.bp-arr.lbl::before{content:attr(data-l); position:absolute; top:-15px; left:-6px; font-size:10px; color:var(--muted); white-space:nowrap}
+.bp-col{display:flex; flex-direction:column; gap:14px}
+.bp-row{display:flex; align-items:center; gap:7px}
+
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-top:6px}
+.legend b{color:var(--ink)}
+
+details.sc{border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:10px; background:var(--surface); margin:12px 0; box-shadow:var(--shadow)}
+details.sc summary{cursor:pointer; padding:13px 18px; font-weight:600; font-size:15.5px; list-style:none; display:flex; align-items:center; gap:10px}
+details.sc summary::before{content:"▸"; color:var(--accent); font-size:13px}
+details.sc[open] summary::before{content:"▾"}
+details.sc summary:hover{color:var(--accent)}
+details.sc summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:10px}
+details.sc .body{padding:0 18px 16px}
+.who{font-size:12.5px; color:var(--muted); font-style:italic; margin-bottom:10px}
+.bad{border-left:3px solid var(--err); background:var(--err-soft); border-radius:0 8px 8px 0; padding:10px 14px; margin:10px 0; font-size:14px}
+.good{border-left:3px solid var(--ok); background:var(--ok-soft); border-radius:0 8px 8px 0; padding:10px 14px; margin:10px 0; font-size:14px}
+.bad b,.good b{display:block; margin-bottom:3px}
+.note{border:1px solid var(--line); background:var(--surface2); border-radius:9px; padding:12px 15px; font-size:13.5px; color:var(--muted); margin:14px 0}
+.ba{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:12px 0}
+@media (max-width:720px){.ba{grid-template-columns:1fr}}
+.ba .b{border:1px solid var(--line); border-radius:9px; padding:10px 12px; background:var(--surface)}
+.ba .b h5{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px}
+.ba table{margin:0; font-size:12.5px}
+.ba td,.ba th{padding:5px 6px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <p class="eyebrow">Разбор эталонного решения</p>
+    <h1>Фитнес-клуб: ERD и BPMN с объяснением — что куда, как и почему</h1>
+    <p class="lead">Готовые диаграммы к кейсу «Спроектируем сервис фитнес-клуба» с построчным разбором каждого решения. В конце — семь ситуаций из жизни клуба (увольнение тренера, рост цен, отмена занятия) и наглядный ответ, что именно происходит в базе данных.</p>
+    <nav class="toc">
+      <a href="#erd">Модель данных</a>
+      <a href="#rel">Связи и кардинальности</a>
+      <a href="#dbml">Полный DBML</a>
+      <a href="#bpmn">Процессы BPMN</a>
+      <a href="#cases">Что меняется в БД</a>
+      <a href="#rules">Правила, которых не видно на схеме</a>
+    </nav>
+    <a class="back" href="index.html">← ко всем материалам практикума</a>
+  </div>
+</header>
+
+<main>
+
+<section id="erd">
+  <h2><span class="num">01</span>Модель данных: три смысловых блока</h2>
+  <p class="sub">Модель из четырнадцати таблиц целиком нечитаема, поэтому аналитики режут её на блоки по смыслу. Здесь три: деньги и доступ, расписание и записи, персональные тренировки. Связи между блоками идут через <code>client</code> и <code>trainer</code>.</p>
+
+  <h3>Блок 1. Клиент, абонементы, посещения</h3>
+  <div class="diagwrap">
+    <svg class="diag" viewBox="0 0 820 380" role="img" aria-label="Схема: клиент, компания, абонемент, тип абонемента, заморозка, посещения">
+      <defs>
+        <marker id="many" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 M1,6 L11,6 M1,11 L11,6"/></marker>
+        <marker id="one" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M6,1 L6,11"/></marker>
+        <marker id="zeroone" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="13" markerHeight="12" orient="auto"><path d="M9,1 L9,11"/><circle cx="4" cy="6" r="3" style="fill:none"/></marker>
+      </defs>
+
+      <rect class="ent" x="30" y="30" width="160" height="52"/>
+      <text class="t" x="46" y="53">company</text><text class="s" x="46" y="70">компания-плательщик</text>
+
+      <rect class="ent ent-key" x="30" y="150" width="160" height="52"/>
+      <text class="t" x="46" y="173">client</text><text class="s" x="46" y="190">человек, один аккаунт</text>
+
+      <rect class="ent ent-key" x="330" y="88" width="170" height="52"/>
+      <text class="t" x="346" y="111">membership</text><text class="s" x="346" y="128">купленная карта</text>
+
+      <rect class="ent" x="630" y="28" width="160" height="52"/>
+      <text class="t" x="646" y="51">membership_type</text><text class="s" x="646" y="68">справочник тарифов</text>
+
+      <rect class="ent" x="630" y="158" width="160" height="52"/>
+      <text class="t" x="646" y="181">freeze_period</text><text class="s" x="646" y="198">периоды заморозки</text>
+
+      <rect class="ent" x="330" y="288" width="170" height="52"/>
+      <text class="t" x="346" y="311">visit</text><text class="s" x="346" y="328">журнал турникета</text>
+
+      <path class="rel" d="M190,56 L330,102" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="228" y="66">0..1 → N</text>
+
+      <path class="rel" d="M190,176 L330,126" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="228" y="166">1 → N</text>
+
+      <path class="rel" d="M500,102 L630,56" marker-start="url(#many)" marker-end="url(#one)"/>
+      <text class="rl" x="524" y="70">N → 1</text>
+
+      <path class="rel" d="M500,126 L630,184" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="524" y="168">1 → N</text>
+
+      <path class="rel" d="M415,140 L415,288" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="424" y="220">1 → N</text>
+
+      <path class="rel" d="M110,202 L110,314 L330,314" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="122" y="308">1 → N</text>
+    </svg>
+    <p class="cap">Чтение Crow’s Foot: чёрточка — «ровно один», кружок с чёрточкой — «ноль или один» (связь необязательна), «лапка» — «много». Читайте связь с двух сторон: у одного клиента много карт, но каждая карта принадлежит ровно одному клиенту.</p>
+  </div>
+
+  <h4>Почему именно так</h4>
+  <ul>
+    <li><b>client — один человек, один аккаунт.</b> Роли (клиент, тренер) не порождают отдельных таблиц с дублями ФИО: тренер, который сам ходит на йогу, остаётся одной строкой.</li>
+    <li><b>membership_type — справочник, membership — экземпляр.</b> Тип отвечает на вопрос «что бывает» (безлимит, утренний, пакет-12), карта — «что купил Иван 3 мая». Это разные уровни, их постоянно путают.</li>
+    <li><b>Цена лежит в обоих местах — и это не ошибка.</b> В типе цена актуальная, для витрины. В карте — снимок на момент покупки: заказчик прямо сказал, что купленная карта живёт по прежним условиям.</li>
+    <li><b>freeze_period — отдельная сущность, а не флаг.</b> Флаг <code>is_frozen</code> ответил бы только «заморожена ли сейчас», а нужно знать даты каждого периода: лимит 30 дней в году считается по ним, и на них же продлевается срок карты.</li>
+    <li><b>company — необязательный плательщик.</b> Обычную карту покупает сам клиент, корпоративную оплачивает компания, поэтому связь «ноль или один», а не обязательная.</li>
+    <li><b>visit связан и с клиентом, и с картой.</b> Только клиента мало: у человека за годы пять карт, а списывать посещение и считать возврат нужно по конкретной.</li>
+  </ul>
+
+  <h3>Блок 2. Тренеры и виды занятий: разрешение «многие-ко-многим»</h3>
+  <div class="diagwrap">
+    <svg class="diag" viewBox="0 0 700 150" role="img" aria-label="Схема: тренер, связующая таблица, вид занятия">
+      <rect class="ent ent-key" x="20" y="45" width="150" height="52"/>
+      <text class="t" x="36" y="68">trainer</text><text class="s" x="36" y="85">Аня, Марк, Олег</text>
+      <rect class="ent" x="255" y="45" width="190" height="52"/>
+      <text class="t" x="271" y="68">trainer_workout_type</text><text class="s" x="271" y="85">кто что может вести</text>
+      <rect class="ent" x="530" y="45" width="150" height="52"/>
+      <text class="t" x="546" y="68">workout_type</text><text class="s" x="546" y="85">йога, кроссфит…</text>
+      <path class="rel" d="M170,71 L255,71" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="188" y="63">1 → N</text>
+      <path class="rel" d="M445,71 L530,71" marker-start="url(#many)" marker-end="url(#one)"/>
+      <text class="rl" x="463" y="63">N → 1</text>
+    </svg>
+    <p class="cap">Связь «многие-ко-многим» в реляционной БД не существует напрямую. Связующая таблица превращает её в две связи «один-ко-многим» — и заодно даёт место для собственных атрибутов связи (например, дата сертификации тренера по этому виду).</p>
+  </div>
+  <p>Тренер Аня ведёт йогу и стретчинг, а кроссфит ведут трое — «много» с обеих сторон. Попытка обойтись полем <code>trainer_id</code> в <code>workout_type</code> означала бы «у вида ровно один тренер», а поле <code>type</code> в <code>trainer</code> — «тренер ведёт ровно один вид». Оба варианта противоречат словам тренера на интервью.</p>
+
+  <h3>Блок 3. Расписание и записи</h3>
+  <div class="diagwrap">
+    <svg class="diag" viewBox="0 0 820 350" role="img" aria-label="Схема: вид занятия, тренер, зал, занятие, запись, клиент">
+      <rect class="ent" x="20" y="20" width="160" height="50"/>
+      <text class="t" x="36" y="42">workout_type</text><text class="s" x="36" y="59">какой вид</text>
+      <rect class="ent ent-key" x="20" y="120" width="160" height="50"/>
+      <text class="t" x="36" y="142">trainer</text><text class="s" x="36" y="159">кто ведёт</text>
+      <rect class="ent" x="20" y="220" width="160" height="50"/>
+      <text class="t" x="36" y="242">hall</text><text class="s" x="36" y="259">где, вместимость</text>
+
+      <rect class="ent ent-key" x="330" y="105" width="180" height="62"/>
+      <text class="t" x="346" y="130">workout</text><text class="s" x="346" y="148">занятие в расписании:</text><text class="s" x="346" y="162">вид + тренер + зал + время</text>
+
+      <rect class="ent ent-key" x="620" y="105" width="170" height="62"/>
+      <text class="t" x="636" y="130">booking</text><text class="s" x="636" y="148">запись клиента,</text><text class="s" x="636" y="162">статус и неявки</text>
+
+      <rect class="ent ent-key" x="330" y="265" width="160" height="50"/>
+      <text class="t" x="346" y="287">client</text><text class="s" x="346" y="304">кто записался</text>
+
+      <path class="rel" d="M180,45 L330,120" marker-start="url(#one)" marker-end="url(#many)"/>
+      <path class="rel" d="M180,145 L330,140" marker-start="url(#one)" marker-end="url(#many)"/>
+      <path class="rel" d="M180,245 L330,158" marker-start="url(#one)" marker-end="url(#many)"/>
+      <path class="rel" d="M510,136 L620,136" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="528" y="128">1 → N</text>
+      <path class="rel" d="M490,282 L620,167" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="520" y="240">1 → N</text>
+    </svg>
+    <p class="cap">Три справочника слева «собираются» в конкретное занятие расписания, а <code>booking</code> — связующая таблица между занятием и клиентом, у которой есть собственная жизнь: статус <code>booked → attended / cancelled / no_show</code>.</p>
+  </div>
+  <p><b>Почему <code>booking</code> обязателен.</b> Без него запись клиента негде хранить, а вместе с ней исчезают неявки — и требование «после трёх неявок подряд блокировать на неделю» становится нереализуемым. Это типичный случай: правило из интервью умирает молча, если под него не завели данные.</p>
+
+  <h3>Блок 4. Персональные тренировки</h3>
+  <div class="diagwrap">
+    <svg class="diag" viewBox="0 0 800 240" role="img" aria-label="Схема: клиент, тренер, пакет персоналок, слот">
+      <rect class="ent ent-key" x="20" y="35" width="150" height="50"/>
+      <text class="t" x="36" y="57">client</text><text class="s" x="36" y="74">купил пакет</text>
+      <rect class="ent ent-key" x="20" y="150" width="150" height="50"/>
+      <text class="t" x="36" y="172">trainer</text><text class="s" x="36" y="189">у кого купил</text>
+      <rect class="ent" x="320" y="90" width="180" height="56"/>
+      <text class="t" x="336" y="113">personal_package</text><text class="s" x="336" y="131">N тренировок, цена</text>
+      <rect class="ent" x="620" y="90" width="160" height="56"/>
+      <text class="t" x="636" y="113">personal_slot</text><text class="s" x="636" y="131">запись на время</text>
+      <path class="rel" d="M170,60 L320,105" marker-start="url(#one)" marker-end="url(#many)"/>
+      <path class="rel" d="M170,175 L320,131" marker-start="url(#one)" marker-end="url(#many)"/>
+      <path class="rel" d="M500,118 L620,118" marker-start="url(#one)" marker-end="url(#many)"/>
+      <text class="rl" x="530" y="110">1 → N</text>
+    </svg>
+    <p class="cap">Пакет покупается у конкретного тренера — поэтому связь идёт и от клиента, и от тренера. Слот — отдельная строка со временем: именно на паре «тренер + время» стоит уникальное ограничение, закрывающее ту самую двойную продажу из WhatsApp.</p>
+  </div>
+</section>
+
+<section id="rel">
+  <h2><span class="num">02</span>Все связи одной таблицей</h2>
+  <p class="sub">Это то, что проверяющий смотрит первым: у каждой связи должна быть кардинальность с обеих сторон и внятное обоснование.</p>
+  <div class="tblwrap">
+  <table>
+    <tr><th>Связь</th><th>Кардинальность</th><th>Как читается</th><th>Почему так</th></tr>
+    <tr><td>client → membership</td><td>1 : N</td><td>У клиента много карт, карта у одного клиента</td><td>Карты копятся годами; «активная одна» — это правило, а не связь 1:1</td></tr>
+    <tr><td>membership_type → membership</td><td>1 : N</td><td>По одному тарифу продано много карт</td><td>Справочник и экземпляр</td></tr>
+    <tr><td>company → membership</td><td>0..1 : N</td><td>Компания оплачивает много карт; у карты плательщика может не быть</td><td>Обычные карты покупает сам клиент — связь необязательная</td></tr>
+    <tr><td>membership → freeze_period</td><td>1 : N</td><td>У карты несколько периодов заморозки</td><td>«Кусками от 7 дней, до 30 в году» — нужны отдельные строки с датами</td></tr>
+    <tr><td>client → visit, membership → visit</td><td>1 : N</td><td>Каждый проход — отдельная строка</td><td>Нужны и списание пакета, и расчёт возврата</td></tr>
+    <tr><td>trainer ↔ workout_type</td><td>M : N</td><td>Тренер ведёт много видов, вид ведут многие</td><td>Разрешается таблицей trainer_workout_type</td></tr>
+    <tr><td>workout_type / trainer / hall → workout</td><td>1 : N</td><td>Занятие ссылается на вид, тренера и зал</td><td>Занятие — это комбинация справочников плюс время</td></tr>
+    <tr><td>workout → booking, client → booking</td><td>1 : N</td><td>На занятие много записей, у клиента много записей</td><td>booking — связующая таблица со своим статусом</td></tr>
+    <tr><td>client / trainer → personal_package</td><td>1 : N</td><td>Пакет куплен клиентом у тренера</td><td>Персоналки привязаны к конкретному тренеру</td></tr>
+    <tr><td>personal_package → personal_slot</td><td>1 : N</td><td>В пакете несколько записей на время</td><td>Слот — факт с датой, пакет — покупка</td></tr>
+  </table>
+  </div>
+</section>
+
+<section id="dbml">
+  <h2><span class="num">03</span>Полный код модели (DBML для dbdiagram.io)</h2>
+  <p class="sub">Скопируйте в <a href="https://dbdiagram.io" style="color:var(--accent)">dbdiagram.io</a> — схема отрисуется сама. Комментарии в коде объясняют неочевидные решения.</p>
+<pre>Table client {
+  id int [pk]
+  full_name varchar
+  phone varchar
+  email varchar
+  status varchar          // active / deleted — удаляем «мягко», см. кейс 6
+}
+
+Table company {           // корпоративный плательщик
+  id int [pk]
+  name varchar
+  inn varchar
+}
+
+Table membership_type {   // СПРАВОЧНИК: актуальная витрина тарифов
+  id int [pk]
+  name varchar            // безлимит / утренний / пакет-12
+  price decimal(10,2)     // деньги — всегда decimal, никогда float
+  visit_limit int         // null = безлимит
+  time_limit_to time      // 16:00 для утреннего, null = без ограничения
+  freeze_days_per_year int
+}
+
+Table membership {        // ЭКЗЕМПЛЯР: купленная карта
+  id int [pk]
+  client_id int [ref: &gt; client.id]
+  company_id int [ref: &gt; company.id, null]   // 0..1 — плательщик
+  membership_type_id int [ref: &gt; membership_type.id]
+  price decimal(10,2)     // СНИМОК цены на момент покупки
+  visit_limit int         // снимок условий: тариф потом менялся, карта — нет
+  time_limit_to time
+  starts_on date
+  ends_on date            // сдвигается при заморозке
+  status varchar          // active / frozen / expired / refunded
+  // правило: не более одной active-карты на клиента
+  // (частичный уникальный индекс, на схеме не рисуется)
+}
+
+Table freeze_period {
+  id int [pk]
+  membership_id int [ref: &gt; membership.id]
+  starts_on date
+  ends_on date            // не короче 7 дней; сумма за год <= 30
+}
+
+Table visit {             // журнал турникета
+  id int [pk]
+  client_id int [ref: &gt; client.id]
+  membership_id int [ref: &gt; membership.id]   // по какой карте прошли
+  entered_at datetime
+  left_at datetime
+}
+
+Table trainer {
+  id int [pk]
+  full_name varchar
+  status varchar          // active / dismissed — уволенных не удаляем
+}
+
+Table workout_type {      // справочник видов
+  id int [pk]
+  name varchar
+}
+
+Table trainer_workout_type {   // разрешение M:N
+  id int [pk]
+  trainer_id int [ref: &gt; trainer.id]
+  workout_type_id int [ref: &gt; workout_type.id]
+}
+
+Table hall {
+  id int [pk]
+  club_id int
+  name varchar
+  capacity int
+}
+
+Table workout {           // занятие в расписании
+  id int [pk]
+  workout_type_id int [ref: &gt; workout_type.id]
+  trainer_id int [ref: &gt; trainer.id]
+  hall_id int [ref: &gt; hall.id]
+  starts_at datetime
+  capacity int            // не больше вместимости зала
+  status varchar          // scheduled / cancelled
+}
+
+Table booking {           // запись на групповое занятие
+  id int [pk]
+  workout_id int [ref: &gt; workout.id]
+  client_id int [ref: &gt; client.id]
+  status varchar          // booked / cancelled / attended / no_show
+  created_at datetime
+  indexes {
+    (workout_id, client_id) [unique]   // один клиент — одна запись на занятие
+  }
+}
+
+Table personal_package {
+  id int [pk]
+  client_id int [ref: &gt; client.id]
+  trainer_id int [ref: &gt; trainer.id]
+  sessions_total int
+  sessions_used int
+  price decimal(10,2)
+}
+
+Table personal_slot {
+  id int [pk]
+  package_id int [ref: &gt; personal_package.id]
+  trainer_id int [ref: &gt; trainer.id]
+  starts_at datetime
+  status varchar          // booked / done / cancelled / no_show
+  indexes {
+    (trainer_id, starts_at) [unique]   // защита от двойной продажи слота
+  }
+}</pre>
+  <div class="note"><b>Чего в DBML не видно.</b> Уникальность «одна активная карта на клиента», лимит 30 дней заморозки в году, «вместимость занятия ≤ вместимости зала» — это ограничения и правила. Они живут в БД (частичные индексы, CHECK, триггеры) и в коде приложения, но на картинке ERD их нет — поэтому такие вещи обязательно выносят в текст постановки.</div>
+</section>
+
+<section id="bpmn">
+  <h2><span class="num">04</span>Процессы: три готовые BPMN-схемы</h2>
+  <p class="sub">ERD отвечает на вопрос «что храним», BPMN — «что и когда происходит». Ниже упрощённые схемы одного пула (система клуба); в полной версии клиент выносится отдельным пулом, а обмен идёт потоками сообщений.</p>
+  <div class="card tight">
+    <div class="legend">
+      <span><b>◯</b> стартовое событие</span>
+      <span><b>◉</b> завершающее событие</span>
+      <span><b>▭</b> задача (глагол + объект)</span>
+      <span><b>◇ ×</b> XOR — ровно одна ветка</span>
+      <span><b>◯ ⏱</b> событие-таймер</span>
+    </div>
+  </div>
+
+  <h3>Процесс 1. Покупка абонемента</h3>
+  <div class="bpx">
+    <div class="bp-node"><div class="bp-start"></div><div class="bp-cap">Клиент выбрал тариф</div></div>
+    <div class="bp-arr"></div>
+    <div class="bp-node"><div class="bp-task">Сформировать заказ</div></div>
+    <div class="bp-arr"></div>
+    <div class="bp-node"><div class="bp-task">Провести оплату</div></div>
+    <div class="bp-arr"></div>
+    <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Оплата прошла?</div></div>
+    <div class="bp-col">
+      <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Выпустить карту и QR</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Абонемент активен</div></div></div>
+      <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Оплата отклонена</div></div></div>
+    </div>
+  </div>
+  <p><b>Что здесь важно.</b> Стартовое событие названо фактом, задачи — глаголами в инфинитиве, у каждой ветки XOR подписано условие, и финалов два: у «оплата отклонена» свой смысл, его нельзя схлопывать в общий «Конец». В базе успешная ветка создаёт строку <code>membership</code> — со <b>снимком</b> цены и условий из <code>membership_type</code>.</p>
+
+  <h3>Процесс 2. Запись на занятие</h3>
+  <div class="bpx">
+    <div class="bp-node"><div class="bp-start"></div><div class="bp-cap">Клиент выбрал занятие</div></div>
+    <div class="bp-arr"></div>
+    <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Карта активна?</div></div>
+    <div class="bp-col">
+      <div class="bp-row">
+        <div class="bp-arr lbl" data-l="да"></div>
+        <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Есть места?</div></div>
+        <div class="bp-col">
+          <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Создать запись</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Запись подтверждена</div></div></div>
+          <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Мест нет</div></div></div>
+        </div>
+      </div>
+      <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Нужен абонемент</div></div></div>
+    </div>
+  </div>
+  <p>Проверка «карта активна» читает <code>membership.status</code> и даты, проверка мест — считает записи со статусом <code>booked</code> на это занятие. Вот где процесс встречается с моделью: <b>каждое условие на схеме должно иметь опору в данных</b>. Если опоры нет — либо модель неполна, либо условие придумано.</p>
+
+  <h3>Процесс 3. Отмена записи и неявки</h3>
+  <div class="bpx">
+    <div class="bp-node"><div class="bp-start"></div><div class="bp-cap">Запрос отмены поступил</div></div>
+    <div class="bp-arr"></div>
+    <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">До начала ≥ 2 часов?</div></div>
+    <div class="bp-col">
+      <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Отменить запись, вернуть место</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Запись отменена</div></div></div>
+      <div class="bp-row">
+        <div class="bp-arr lbl" data-l="нет"></div>
+        <div class="bp-node"><div class="bp-task">Зафиксировать неявку</div></div>
+        <div class="bp-arr"></div>
+        <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Третья подряд?</div></div>
+        <div class="bp-col">
+          <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Заблокировать запись</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-timer">⏱</div><div class="bp-cap">через 7 дней</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Блокировка снята</div></div></div>
+          <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Неявка зафиксирована</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p><b>Три вещи, за которые тут снимают баллы.</b> Первая: «подождать неделю» рисуют задачей — но ждать не работа, это событие-таймер. Вторая: счётчик «третья подряд» негде хранить, если в модели нет <code>booking.status</code> со значением <code>no_show</code>. Третья: у процесса один общий финал вместо трёх осмысленных исходов.</p>
+</section>
+
+<section id="cases">
+  <h2><span class="num">05</span>Что меняется в базе: семь ситуаций из жизни клуба</h2>
+  <p class="sub">Самая полезная проверка модели — прогнать через неё реальные события. Ниже: что происходит, как ломается наивное решение и что спасает правильное. Раскрывайте по одной.</p>
+
+  <details class="sc" open>
+    <summary>Кейс 1. Увольняется тренер Марк</summary>
+    <div class="body">
+      <p class="who">Администратор: «Марк уволился с 1 сентября. Уберите его из системы».</p>
+      <p>На Марка завязано многое: тридцать прошедших занятий, две записи на будущее, восемь оплаченных пакетов персоналок и записи в <code>trainer_workout_type</code>.</p>
+      <div class="bad"><b>Наивное решение: <code>DELETE FROM trainer WHERE id = 3</code></b>
+      Если внешние ключи настроены на каскад — вместе с Марком исчезнут занятия, а с ними записи клиентов и вся история посещений. Если на <code>SET NULL</code> — останутся занятия-сироты без тренера. Если ограничение строгое — база просто не даст удалить, и администратор придёт с вопросом «почему не работает».</div>
+      <div class="good"><b>Правильно: мягкое удаление</b>
+      <code>UPDATE trainer SET status = 'dismissed'</code>. История цела, отчёты за прошлые месяцы не меняются, а приложение перестаёт показывать Марка в списках выбора. Внешние ключи — <code>ON DELETE RESTRICT</code>: физически удалить тренера с историей нельзя, и это правильно.</div>
+      <div class="ba">
+        <div class="b"><h5>Было</h5>
+          <table><tr><th>id</th><th>ФИО</th><th>status</th></tr><tr><td>3</td><td>Марк</td><td>active</td></tr></table>
+        </div>
+        <div class="b"><h5>Стало</h5>
+          <table><tr><th>id</th><th>ФИО</th><th>status</th></tr><tr class="chg"><td>3</td><td>Марк</td><td>dismissed</td></tr></table>
+        </div>
+      </div>
+      <h4>А что с будущими занятиями и пакетами?</h4>
+      <p>Это уже не вопрос модели, а вопрос к заказчику — и именно так его надо задать: «При увольнении тренера его будущие занятия отменяются или передаются другому? Что происходит с оплаченными пакетами персоналок — возврат, перевод на другого тренера или доработка?» Пока ответа нет, решение фиксируется в <b>допущениях</b>.</p>
+      <div class="note">Приём переносимый: <b>сущности с историей не удаляют физически</b>. Клиент, тренер, товар, сотрудник — всё это получает статус, а не <code>DELETE</code>.</div>
+    </div>
+  </details>
+
+  <details class="sc">
+    <summary>Кейс 2. Клуб поднял цену безлимита с 4 000 до 5 000 ₽</summary>
+    <div class="body">
+      <p class="who">Владелец: «С понедельника новая цена. Но у тех, кто уже купил, ничего не меняем».</p>
+      <p>Меняется <b>одна строка</b> — в справочнике <code>membership_type</code>. Ранее проданные карты не трогаются вообще: в каждой лежит своя цена, зафиксированная при покупке.</p>
+      <div class="ba">
+        <div class="b"><h5>membership_type (справочник)</h5>
+          <table><tr><th>id</th><th>name</th><th>price</th></tr><tr class="chg"><td>1</td><td>Безлимит</td><td>4 000 → 5 000</td></tr></table>
+        </div>
+        <div class="b"><h5>membership (проданные карты)</h5>
+          <table><tr><th>id</th><th>клиент</th><th>price</th></tr><tr><td>17</td><td>Иван</td><td>4 000 — не меняется</td></tr><tr><td>18</td><td>Пётр</td><td>4 000 — не меняется</td></tr></table>
+        </div>
+      </div>
+      <div class="bad"><b>Как ломается модель без снимка</b>
+      Если цены нет в карте и сумма всегда берётся из справочника, то в понедельник у Ивана «задним числом» подорожает уже оплаченная карта. Возврат посчитается от 5 000 вместо 4 000, а бухгалтерия получит расхождение с кассой.</div>
+      <div class="note">Тот же приём вы уже видели: тариф поездки в каршеринге, цена блюда в доставке, цена билета в кинотеатре. Формулировка-маркер всегда одна: «даже если потом изменили».</div>
+    </div>
+  </details>
+
+  <details class="sc">
+    <summary>Кейс 3. Клиент не пришёл третий раз подряд</summary>
+    <div class="body">
+      <p class="who">Правило: «После трёх неявок подряд блокируем запись на неделю».</p>
+      <p>Событие затрагивает три места: статус записи, счётчик неявок и — если это третья — блокировку с датой снятия.</p>
+      <div class="ba">
+        <div class="b"><h5>booking</h5>
+          <table><tr><th>id</th><th>занятие</th><th>status</th></tr><tr><td>101</td><td>Йога 12.08</td><td>no_show</td></tr><tr><td>118</td><td>Йога 15.08</td><td>no_show</td></tr><tr class="chg"><td>133</td><td>Йога 19.08</td><td>booked → no_show</td></tr></table>
+        </div>
+        <div class="b"><h5>Следствие</h5>
+          <table><tr><th>клиент</th><th>блокировка до</th></tr><tr class="new"><td>Иван</td><td>26.08 (19.08 + 7 дней)</td></tr></table>
+        </div>
+      </div>
+      <p><b>Где хранить блокировку — два варианта, оба принимаются на защите.</b> Вычислять на лету (посмотреть три последние записи клиента) — нет лишних данных, но запрос на каждую попытку записи. Хранить явно (<code>booking_ban</code> с датой окончания) — быстро и видно в интерфейсе, но требует аккуратного снятия по таймеру.</p>
+      <div class="bad"><b>Что нельзя</b>
+      Хранить у клиента одно поле <code>no_show_count</code> и увеличивать его. Слово «подряд» тогда теряется: пришёл на занятие — счётчик должен обнулиться, а по одному числу непонятно, когда именно это произошло.</div>
+    </div>
+  </details>
+
+  <details class="sc">
+    <summary>Кейс 4. Клуб отменил занятие — заболел тренер</summary>
+    <div class="body">
+      <p class="who">Администратор: «Кроссфит в четверг отменяем, там было 14 записей».</p>
+      <p>Одна строка занятия и четырнадцать строк записей. Ключевая тонкость: <b>это не неявка клиентов</b> — виноват клуб, поэтому санкции применять нельзя.</p>
+      <div class="ba">
+        <div class="b"><h5>workout</h5>
+          <table><tr><th>id</th><th>занятие</th><th>status</th></tr><tr class="chg"><td>77</td><td>Кроссфит 21.08</td><td>scheduled → cancelled</td></tr></table>
+        </div>
+        <div class="b"><h5>booking (14 строк)</h5>
+          <table><tr><th>status</th><th>что делаем</th></tr><tr class="chg"><td>booked → cancelled</td><td>причина: отмена клубом</td></tr><tr class="new"><td>—</td><td>вернуть списанные посещения пакетным картам</td></tr></table>
+        </div>
+      </div>
+      <div class="bad"><b>Частая ошибка проектирования</b>
+      Один общий статус <code>cancelled</code> без указания, кто отменил. Через месяц никто не ответит на вопрос «сколько занятий сорвал клуб» — а это ключевая метрика качества сервиса. Решение: либо отдельный статус <code>cancelled_by_club</code>, либо поле <code>cancel_reason</code>.</div>
+      <p>Плюс уведомления всем записавшимся — асинхронно: если сервис рассылки лежит, отмена занятия всё равно должна пройти.</p>
+    </div>
+  </details>
+
+  <details class="sc">
+    <summary>Кейс 5. «Кроссфит» переименовали в «Функциональный тренинг»</summary>
+    <div class="body">
+      <p class="who">Маркетолог: «Меняем название направления во всей сети».</p>
+      <p>В правильной модели это <b>одна строка</b> в справочнике <code>workout_type</code> — и все 4 000 прошедших и будущих занятий автоматически подхватывают новое название, потому что хранят <code>workout_type_id</code>, а не текст.</p>
+      <div class="ba">
+        <div class="b"><h5>Правильно: справочник</h5>
+          <table><tr><th>id</th><th>name</th></tr><tr class="chg"><td>4</td><td>Кроссфит → Функциональный тренинг</td></tr></table>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:6px">UPDATE одной строки, ссылки не трогаем</p>
+        </div>
+        <div class="b"><h5>Неправильно: строка в занятии</h5>
+          <table><tr><th>workout.type</th><th></th></tr><tr class="del"><td>"Кроссфит"</td><td>4 000 строк</td></tr><tr class="del"><td>"кроссфит"</td><td>опечатки</td></tr><tr class="del"><td>"Кросфит"</td><td>ещё опечатки</td></tr></table>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:6px">Массовый UPDATE, и часть строк не найдётся</p>
+        </div>
+      </div>
+      <p>Именно поэтому в задании про модель джуниора поле <code>type varchar</code> отмечено как ошибка: без справочника «йога» и «Йога» — два разных вида, и отчёт по направлениям развалится.</p>
+    </div>
+  </details>
+
+  <details class="sc">
+    <summary>Кейс 6. Клиент требует удалить свои персональные данные</summary>
+    <div class="body">
+      <p class="who">Юрист: «Пришло заявление на удаление персональных данных. Удаляйте».</p>
+      <p>Конфликт двух требований: закон требует убрать персональные данные, бухгалтерия — сохранить финансовые операции и посещения за отчётный период.</p>
+      <div class="good"><b>Решение: анонимизация вместо удаления</b>
+      Персональные поля затираются, а строка и все её связи остаются: <code>full_name = 'Удалённый клиент #4821'</code>, <code>phone = null</code>, <code>email = null</code>, <code>status = 'deleted'</code>. Продажи, посещения и записи сохраняются, но за ними больше нет человека.</div>
+      <div class="ba">
+        <div class="b"><h5>client — было</h5>
+          <table><tr><th>id</th><th>ФИО</th><th>телефон</th></tr><tr><td>4821</td><td>Иван Петров</td><td>+7 999…</td></tr></table>
+        </div>
+        <div class="b"><h5>client — стало</h5>
+          <table><tr><th>id</th><th>ФИО</th><th>телефон</th></tr><tr class="chg"><td>4821</td><td>Удалённый #4821</td><td>—</td></tr></table>
+        </div>
+      </div>
+      <p><b>Что при этом НЕ ломается:</b> отчёт «сколько продано карт в июле» и «загрузка клуба по часам» остаются верными, потому что строки на месте. Физический <code>DELETE</code> сломал бы оба отчёта задним числом.</p>
+    </div>
+  </details>
+
+  <details class="sc">
+    <summary>Кейс 7. Два клиента жмут «Записаться» на последнее место одновременно</summary>
+    <div class="body">
+      <p class="who">Из жизни: на кроссфит осталось одно место, две заявки приходят с разницей в 20 миллисекунд.</p>
+      <p>Обе транзакции читают «занято 19 из 20», обе делают вывод «место есть», обе создают запись. В зале появляется 21-й человек — ровно та боль, из-за которой заказчик и пришёл.</p>
+      <div class="bad"><b>Почему проверка «если мест меньше вместимости» не спасает</b>
+      Между чтением количества и вставкой записи проходит время. На уровне изоляции Read Committed (по умолчанию в PostgreSQL) вторая транзакция просто не видит ещё не закоммиченную запись первой. Это называется гонкой, и «проверить перед вставкой» её не лечит.</div>
+      <div class="good"><b>Три рабочих способа</b>
+      <b>1.</b> Заблокировать строку занятия на время записи: <code>SELECT … FROM workout WHERE id = 77 FOR UPDATE</code> — вторая транзакция ждёт и видит уже актуальную картину.<br>
+      <b>2.</b> Уровень изоляции Serializable — база сама отклонит конфликтующую транзакцию, но приложение обязано уметь её повторить.<br>
+      <b>3.</b> Заранее создать строки-места (как кресла в кинотеатре) и повесить уникальность — конфликт станет физически невозможен.</div>
+      <p>А вот <b>двойная продажа слота персоналки</b> лечится проще всего, третьим способом: уникальный индекс на пару <code>(trainer_id, starts_at)</code>. Вторая вставка упадёт с ошибкой при любом уровне изоляции, и приложение покажет «слот уже занят».</p>
+      <div class="note"><b>Правило для защиты:</b> сначала назовите аномалию (потерянное обновление, фантом), потом выбирайте инструмент — ограничение, блокировку строки или уровень изоляции. Начинать с «поднимем изоляцию» — почти всегда дороже и слабее, чем поставить <code>unique</code>.</div>
+    </div>
+  </details>
+</section>
+
+<section id="rules">
+  <h2><span class="num">06</span>Правила, которых не видно на схеме</h2>
+  <p class="sub">Диаграмма показывает структуру, но не всё требование. Это список того, что обязательно дописывают текстом к ERD — иначе разработчик о них не узнает.</p>
+  <div class="tblwrap">
+  <table>
+    <tr><th>Правило</th><th>Где реализуется</th></tr>
+    <tr><td>У клиента не более одной активной карты</td><td>Частичный уникальный индекс по <code>client_id</code> среди строк со статусом <code>active</code></td></tr>
+    <tr><td>Заморозка — только безлимит, период ≥ 7 дней, ≤ 30 дней в году</td><td>Проверка в приложении + CHECK на длительность периода</td></tr>
+    <tr><td>Вместимость занятия ≤ вместимости зала</td><td>Проверка при создании занятия (триггер или код)</td></tr>
+    <tr><td>Тренера можно поставить только на вид, который он ведёт</td><td>Проверка по <code>trainer_workout_type</code> при создании занятия</td></tr>
+    <tr><td>Отмена записи — не позднее чем за 2 часа</td><td>Условие в процессе (BPMN), опирается на <code>workout.starts_at</code></td></tr>
+    <tr><td>Один клиент — одна запись на занятие</td><td><code>unique (workout_id, client_id)</code></td></tr>
+    <tr><td>Один слот персоналки — одна запись</td><td><code>unique (trainer_id, starts_at)</code></td></tr>
+    <tr><td>Тренера и клиента с историей нельзя удалять физически</td><td><code>ON DELETE RESTRICT</code> + статус (мягкое удаление)</td></tr>
+  </table>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0">Как проверить свою модель за пять минут</h4>
+    <ol>
+      <li>Возьмите каждое требование из блокнота и найдите на схеме место, где оно живёт. Не нашли — модель неполна.</li>
+      <li>Прогоните через модель события: покупка, вход, запись, неявка, отмена, увольнение, рост цен. Каждое должно быть выразимо.</li>
+      <li>Для каждого «удалить» спросите: а что станет с историей?</li>
+      <li>Для каждого «сколько» спросите: а с какого момента считаем и что если задним числом?</li>
+      <li>Выпишите всё, что решили сами, в раздел «Допущения». Записанное допущение ошибкой не считается, молчаливое — считается.</li>
+    </ol>
+  </div>
+  <p style="margin-top:22px"><a class="back" href="index.html">← ко всем материалам практикума</a></p>
+</section>
+
+</main>
+</body>
+</html>
