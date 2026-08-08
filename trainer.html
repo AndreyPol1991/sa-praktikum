@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тренажёр нотаций: ERD · BPMN · UML · DFD</title>
+<style>
+:root{
+  --bg:#F6F7F9; --surface:#FFFFFF; --surface2:#F1F3F7;
+  --ink:#1B2230; --muted:#5B6577; --line:#E2E6ED;
+  --accent:#2C4FC7; --accent-ink:#FFFFFF; --accent-soft:#EDF1FD;
+  --ok:#177A46; --ok-soft:#E8F5EE; --err:#BE3A2F; --err-soft:#FBEDEB;
+  --code-bg:#F2F4F8; --shadow:0 1px 3px rgba(27,34,48,.07);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#131722; --surface:#1B2130; --surface2:#20273A;
+    --ink:#E9EDF5; --muted:#9AA4B8; --line:#2A3244;
+    --accent:#8AA2F5; --accent-ink:#10162B; --accent-soft:#232C48;
+    --ok:#4CC38A; --ok-soft:#18301F; --err:#E5695E; --err-soft:#3A211E;
+    --code-bg:#161C2A; --shadow:0 1px 3px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F6F7F9; --surface:#FFFFFF; --surface2:#F1F3F7;
+  --ink:#1B2230; --muted:#5B6577; --line:#E2E6ED;
+  --accent:#2C4FC7; --accent-ink:#FFFFFF; --accent-soft:#EDF1FD;
+  --ok:#177A46; --ok-soft:#E8F5EE; --err:#BE3A2F; --err-soft:#FBEDEB;
+  --code-bg:#F2F4F8; --shadow:0 1px 3px rgba(27,34,48,.07);
+}
+:root[data-theme="dark"]{
+  --bg:#131722; --surface:#1B2130; --surface2:#20273A;
+  --ink:#E9EDF5; --muted:#9AA4B8; --line:#2A3244;
+  --accent:#8AA2F5; --accent-ink:#10162B; --accent-soft:#232C48;
+  --ok:#4CC38A; --ok-soft:#18301F; --err:#E5695E; --err-soft:#3A211E;
+  --code-bg:#161C2A; --shadow:0 1px 3px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.55 "Segoe UI", -apple-system, system-ui, Roboto, sans-serif;
+}
+button{font:inherit; color:inherit}
+.top{
+  border-bottom:1px solid var(--line); background:var(--surface);
+  padding:20px 24px 16px;
+}
+.top-in{max-width:1080px; margin:0 auto}
+.eyebrow{
+  font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--accent); margin:0 0 4px;
+}
+h1{
+  font-family:Georgia, "Times New Roman", serif; font-weight:400;
+  font-size:26px; margin:0 0 2px; text-wrap:balance;
+}
+.top-sub{color:var(--muted); font-size:13.5px; margin:0 0 12px}
+.totalbar{height:5px; border-radius:3px; background:var(--surface2); overflow:hidden; max-width:420px}
+.totalbar i{display:block; height:100%; width:0; background:var(--accent); border-radius:3px; transition:width .3s}
+.totalnum{font-size:12px; color:var(--muted); margin-top:5px}
+.totalnum b{color:var(--ink); font-variant-numeric:tabular-nums}
+
+.app{max-width:1080px; margin:0 auto; display:grid; grid-template-columns:250px 1fr; gap:28px; padding:22px 24px 80px}
+.side{position:sticky; top:16px; align-self:start; display:flex; flex-direction:column; gap:6px}
+.navb{
+  text-align:left; border:1px solid var(--line); background:var(--surface);
+  border-radius:10px; padding:10px 12px; cursor:pointer; width:100%;
+}
+.navb:hover{border-color:var(--accent)}
+.navb:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.navb.act{border-color:var(--accent); background:var(--accent-soft)}
+.navb .nb-t{font-weight:600; font-size:14px}
+.navb .nb-s{font-size:11.5px; color:var(--muted); margin-top:1px}
+.navb .nb-bar{height:3px; background:var(--line); border-radius:2px; margin-top:7px; overflow:hidden}
+.navb .nb-bar i{display:block; height:100%; width:0; background:var(--accent); transition:width .3s}
+
+main{min-width:0}
+.mod-head{margin:4px 0 18px}
+.mod-eyebrow{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 4px}
+.mod-title{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:30px; margin:0 0 6px; text-wrap:balance}
+.mod-sub{color:var(--muted); font-size:14px; margin:0 0 10px; max-width:64ch}
+.mod-meta{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.chip{
+  font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px;
+  background:var(--surface2); border:1px solid var(--line); font-variant-numeric:tabular-nums;
+}
+.chip.ok{background:var(--ok-soft); color:var(--ok); border-color:transparent}
+.linkbtn{background:none; border:none; color:var(--accent); cursor:pointer; font-size:12.5px; padding:3px 4px; text-decoration:underline; text-underline-offset:3px}
+.linkbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+
+details.theory{
+  border:1px solid var(--line); border-radius:12px; background:var(--surface);
+  margin:0 0 22px; box-shadow:var(--shadow);
+}
+details.theory summary{
+  cursor:pointer; padding:12px 16px; font-weight:600; font-size:14px; list-style:none;
+  display:flex; align-items:center; gap:8px;
+}
+details.theory summary::before{content:"▸"; color:var(--accent); transition:transform .15s}
+details.theory[open] summary::before{transform:rotate(90deg)}
+details.theory summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:12px}
+.theory-in{padding:2px 18px 16px; font-size:14px}
+.theory-in h4{margin:14px 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600}
+.theory-in p{margin:6px 0; max-width:68ch}
+.theory-in ul{margin:6px 0; padding-left:20px; max-width:68ch}
+.theory-in li{margin:3px 0}
+.theory-in code{background:var(--code-bg); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font:12.5px Consolas,"Cascadia Mono",monospace}
+.glyph{font:600 13px Consolas,monospace; color:var(--accent); white-space:nowrap}
+
+.task{
+  border:1px solid var(--line); border-radius:12px; background:var(--surface);
+  margin:0 0 16px; box-shadow:var(--shadow); overflow:hidden;
+}
+.task-head{
+  display:flex; align-items:center; gap:10px; padding:11px 16px 0;
+}
+.task-num{
+  font-family:Georgia,serif; font-size:15px; color:var(--muted); font-variant-numeric:tabular-nums;
+}
+.task-type{
+  font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); background:var(--surface2); border-radius:4px; padding:2px 7px;
+}
+.task-state{margin-left:auto; font-size:12px; font-weight:600}
+.task-state.ok{color:var(--ok)} .task-state.err{color:var(--err)}
+.task-q{padding:8px 16px 0; font-size:15px; font-weight:600; max-width:66ch}
+.task-body{padding:12px 16px 16px}
+pre.codeblock{
+  background:var(--code-bg); border:1px solid var(--line); border-radius:8px;
+  padding:12px 14px; font:12.5px/1.5 Consolas,"Cascadia Mono",monospace;
+  overflow-x:auto; margin:0 0 12px; white-space:pre;
+}
+.legend-note{font-size:13px; color:var(--muted); font-style:italic; margin:0 0 10px; max-width:64ch}
+
+.opt{
+  display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border:1px solid var(--line);
+  border-radius:9px; margin-bottom:7px; cursor:pointer; background:var(--surface);
+}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin-top:3px; accent-color:var(--accent); flex:none}
+.opt input:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.opt span{font-size:14px}
+.task.locked .opt{cursor:default; pointer-events:none}
+.opt.is-ok{border-color:var(--ok); background:var(--ok-soft)}
+.opt.is-err{border-color:var(--err); background:var(--err-soft)}
+.opt .mark{margin-left:auto; font-weight:700; flex:none; align-self:center}
+.opt.is-ok .mark{color:var(--ok)} .opt.is-err .mark{color:var(--err)}
+
+.mrow{display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap}
+.mrow .ml{flex:1 1 260px; font-size:14px; border:1px solid var(--line); border-radius:9px; padding:8px 12px; background:var(--surface)}
+.mrow select{
+  flex:0 1 240px; padding:8px 10px; border:1px solid var(--line); border-radius:9px;
+  background:var(--surface); color:var(--ink); font:14px "Segoe UI",system-ui,sans-serif; cursor:pointer;
+}
+.mrow select:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.mrow.is-ok .ml{border-color:var(--ok); background:var(--ok-soft)}
+.mrow.is-err .ml{border-color:var(--err); background:var(--err-soft)}
+.mrow .fix{font-size:12.5px; color:var(--ok); flex-basis:100%}
+
+.ord-zone{margin-bottom:10px}
+.ord-label{font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin:0 0 6px}
+.ord-pool,.ord-seq{display:flex; flex-wrap:wrap; gap:7px; min-height:40px; padding:8px; border:1px dashed var(--line); border-radius:10px}
+.ord-seq{border-style:solid; background:var(--surface2)}
+.ordc{
+  border:1px solid var(--line); background:var(--surface); border-radius:8px;
+  padding:6px 11px; font-size:13.5px; cursor:pointer; text-align:left;
+}
+.ordc:hover{border-color:var(--accent)}
+.ordc:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.ordc .n{font-family:Georgia,serif; color:var(--accent); margin-right:6px; font-variant-numeric:tabular-nums}
+.task.locked .ordc{pointer-events:none}
+.ordc.is-ok{border-color:var(--ok); background:var(--ok-soft)}
+.ordc.is-err{border-color:var(--err); background:var(--err-soft)}
+.ord-correct{font-size:13px; margin-top:8px; color:var(--muted)}
+.ord-correct b{color:var(--ink)}
+
+.task-ctrl{display:flex; align-items:center; gap:10px; margin-top:4px}
+.checkbtn{
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:9px;
+  padding:8px 18px; font-weight:600; font-size:14px; cursor:pointer;
+}
+.checkbtn:hover:not(:disabled){filter:brightness(1.08)}
+.checkbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.checkbtn:disabled{opacity:.45; cursor:default}
+.fb{
+  margin-top:12px; border-radius:9px; padding:11px 14px; font-size:13.5px;
+  border:1px solid transparent; max-width:70ch;
+}
+.fb.ok{background:var(--ok-soft); border-color:var(--ok)}
+.fb.err{background:var(--err-soft); border-color:var(--err)}
+.fb b.v{display:block; margin-bottom:4px}
+.fb.ok b.v{color:var(--ok)} .fb.err b.v{color:var(--err)}
+
+.bpx{display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--surface2); margin:0 0 12px; overflow-x:auto}
+.bp-node{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none}
+.bp-cap{font-size:10.5px; color:var(--muted); max-width:110px; text-align:center; line-height:1.25}
+.bp-start{width:24px; height:24px; border:2px solid var(--ink); border-radius:50%}
+.bp-end{width:24px; height:24px; border:5px solid var(--ink); border-radius:50%}
+.bp-task{border:1.5px solid var(--ink); border-radius:8px; padding:6px 10px; font-size:12px; max-width:140px; text-align:center; background:var(--surface)}
+.bp-gwrap{display:flex; flex-direction:column; align-items:center; gap:6px; flex:none}
+.bp-gw{width:24px; height:24px; border:1.5px solid var(--ink); transform:rotate(45deg); display:flex; align-items:center; justify-content:center; margin:5px; background:var(--surface)}
+.bp-gw span{transform:rotate(-45deg); font-weight:700; font-size:14px}
+.bp-arr{width:24px; height:2px; background:var(--muted); position:relative; flex:none}
+.bp-arr::after{content:''; position:absolute; right:-1px; top:-4px; border-left:7px solid var(--muted); border-top:5px solid transparent; border-bottom:5px solid transparent}
+.bp-col{display:flex; flex-direction:column; gap:12px}
+.bp-row{display:flex; align-items:center; gap:8px}
+
+.sum-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin:0 0 22px}
+.sum-card{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:16px; box-shadow:var(--shadow)}
+.sum-card h3{margin:0 0 2px; font-size:15px}
+.sum-card .sc-s{font-size:12px; color:var(--muted); margin-bottom:10px}
+.sum-card .sc-n{font-family:Georgia,serif; font-size:30px; font-variant-numeric:tabular-nums}
+.sum-card .sc-n small{font-size:14px; color:var(--muted); font-family:"Segoe UI",sans-serif}
+.sum-bar{height:5px; border-radius:3px; background:var(--surface2); overflow:hidden; margin-top:8px}
+.sum-bar i{display:block; height:100%; background:var(--accent); border-radius:3px}
+.verdict{
+  border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:10px;
+  background:var(--surface); padding:16px 18px; margin:0 0 18px; max-width:70ch;
+}
+.verdict h3{margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:20px}
+.verdict p{margin:0; color:var(--muted); font-size:14px}
+.danger{
+  background:none; border:1px solid var(--err); color:var(--err); border-radius:9px;
+  padding:8px 16px; font-size:13.5px; cursor:pointer;
+}
+.danger:hover{background:var(--err-soft)}
+.danger:focus-visible{outline:2px solid var(--err); outline-offset:2px}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr; padding:16px 14px 60px}
+  .side{position:static; flex-direction:row; overflow-x:auto; padding-bottom:4px}
+  .navb{min-width:150px; flex:none}
+  .top{padding:16px}
+  .mod-title{font-size:24px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important}
+}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <p class="eyebrow">Практикум системного аналитика</p>
+    <h1>Тренажёр нотаций: ERD · BPMN · UML · DFD</h1>
+    <p class="top-sub">84 задания: теория по четырём нотациям, кейсы-ситуации «какая диаграмма нужна», мини-кейсы с решениями аналитика и сквозной кейс. Проверка мгновенная, отвечать можно один раз — как на защите. Прогресс сохраняется в этом браузере.</p>
+    <div class="totalbar"><i id="totalfill"></i></div>
+    <div class="totalnum"><b id="totaldone">0</b> из 84 заданий · верно: <b id="totalok">0</b></div>
+  </div>
+</header>
+
+<div class="app">
+  <nav class="side" id="side" aria-label="Модули"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- shapes helpers for BPMN mini-diagrams ---------- */
+function nStart(cap){return `<div class="bp-node"><div class="bp-start"></div><div class="bp-cap">${cap||""}</div></div>`}
+function nEnd(cap){return `<div class="bp-node"><div class="bp-end"></div><div class="bp-cap">${cap||"(без названия)"}</div></div>`}
+function nTask(cap){return `<div class="bp-node"><div class="bp-task">${cap}</div></div>`}
+function nGw(sym,cap){return `<div class="bp-gwrap"><div class="bp-gw"><span>${sym}</span></div><div class="bp-cap">${cap||""}</div></div>`}
+const ARR = `<div class="bp-arr"></div>`;
+
+const DIAG_B9 = `<div class="bpx">
+  ${nStart("Получение заявки")} ${ARR} ${nTask("Заявка")} ${ARR} ${nGw("+","")}
+  <div class="bp-col">
+    <div class="bp-row">${ARR} ${nTask("Оформить возврат денег")} ${ARR} ${nEnd("(без названия)")}</div>
+    <div class="bp-row">${ARR} ${nTask("Отклонить заявку")} ${ARR} ${nEnd("(без названия)")}</div>
+  </div>
+</div>`;
+
+const LEGEND_BPMN = `<div class="bpx">
+  ${nStart("стартовое событие")} ${nEnd("завершающее событие")} ${nTask("Задача")} ${nGw("×","шлюз XOR")} ${nGw("+","шлюз AND")}
+</div>`;
+
+/* ---------- data ---------- */
+const MODULES = [
+{
+id:"erd", nav:"ERD", navSub:"Модель данных · 16 заданий",
+title:"ERD — модель данных", eyebrow:"Модуль 1 · Crow’s Foot · dbdiagram.io",
+sub:"Сущности, ключи, кардинальности и разрешение связей «многие-ко-многим». Ловушки взяты из кейсов «Онлайн-школа» и «Каршеринг».",
+theory:`
+<h4>Базовые понятия</h4>
+<ul>
+<li><b>Сущность</b> — объект предметной области, о котором храним данные («существительное»: клиент, курс, заказ). В БД становится таблицей.</li>
+<li><b>Атрибут</b> — свойство сущности. <b>PK</b> — уникальный идентификатор строки, по правилам курса — суррогатный <code>id</code>. <b>FK</b> — ссылка на другую таблицу, имя <code>&lt;таблица&gt;_id</code>.</li>
+<li><b>Слабая сущность</b> — не существует без родителя (строка заказа, попытка сдачи домашки).</li>
+</ul>
+<h4>Кардинальности (Crow’s Foot)</h4>
+<ul>
+<li><span class="glyph">—|</span> ровно один &nbsp;·&nbsp; <span class="glyph">—○</span> ноль допускается (необязательность) &nbsp;·&nbsp; <span class="glyph">—&lt;</span> «лапка» = много.</li>
+<li>Читайте связь <b>с двух сторон</b>: «сколько Б у одного А?» и «сколько А у одного Б?». «Много» с обеих сторон = M:N.</li>
+<li><b>M:N всегда разрешается связующей таблицей</b> с двумя FK (например, <code>course_teacher</code>). Список id через запятую — антипаттерн.</li>
+</ul>
+<h4>Правила именования курса</h4>
+<p>Таблицы — единственное число, <code>snake_case</code>; PK — <code>id</code>; FK — <code>&lt;таблица&gt;_id</code>. Всё, чего нет в легенде, — не додумываем, а фиксируем в «Допущениях».</p>`,
+tasks:[
+{type:"single", q:"Что такое сущность в ERD?",
+ opts:["Объект предметной области, данные о котором нужно хранить","Любое действие пользователя в системе","Поток данных между процессами","Этап бизнес-процесса"], correct:0,
+ expl:"Сущность — «существительное» предметной области: клиент, заказ, курс. Действия и этапы — территория BPMN и activity-диаграмм, потоки данных — DFD."},
+{type:"single", q:"Зачем таблице первичный ключ (PK)?",
+ opts:["Однозначно идентифицировать каждую строку","Ускорять все запросы к таблице","Хранить ссылку на другую таблицу","Задавать порядок строк"], correct:0,
+ expl:"PK — уникальный идентификатор строки; по правилам курса это суррогатный `id`. Ссылка на другую таблицу — это внешний ключ (FK), а порядок строк ключом не задаётся."},
+{type:"match", q:"Определите кардинальность по фразе заказчика.",
+ items:[
+  {l:"«Клиент оформляет много заказов, каждый заказ принадлежит одному клиенту»", a:1},
+  {l:"«Студент записан на несколько курсов, и на каждом курсе много студентов»", a:2},
+  {l:"«У сотрудника ровно один пропуск, и пропуск закреплён за одним сотрудником»", a:0},
+  {l:"«Урок входит ровно в один курс, в курсе много уроков»", a:1}],
+ choices:["1:1","1:N","M:N"],
+ expl:"Кардинальность читается с двух сторон: «сколько Б у одного А» и «сколько А у одного Б». Если с обеих сторон «много» — это M:N, и её придётся разрешать связующей таблицей."},
+{type:"single", q:"Как правильно разрешить связь «многие-ко-многим»?",
+ opts:["Создать связующую таблицу с внешними ключами на обе стороны","Добавить FK в одну из двух таблиц","Хранить список id через запятую в одном столбце","Объединить обе сущности в одну таблицу"], correct:0,
+ expl:"M:N в реляционной БД напрямую не выражается. Связующая таблица (например, `course_teacher` с `course_id` и `teacher_id`) превращает одну связь M:N в две связи 1:N. Список id через запятую — классический антипаттерн: по нему нельзя ни сделать join, ни проверить целостность."},
+{type:"multi", q:"Отметьте все ошибки этой модели.",
+ legend:"Легенда: «Курс ведут несколько преподавателей, и преподаватель может вести несколько курсов».",
+ code:`Table course {
+  id int [pk]
+  title varchar
+  teacher_id int [ref: > teacher.id]
+}
+
+Table teacher {
+  id int [pk]
+  name varchar
+}`,
+ opts:["Связь курс–преподаватель сделана как teacher_id в course — потеряли, что преподавателей несколько","Нужна связующая таблица course_teacher с course_id и teacher_id","Таблицы названы в единственном числе — надо во множественном","У таблицы teacher нет первичного ключа"], correct:[0,1],
+ expl:"`teacher_id` в `course` жёстко даёт курсу одного преподавателя — это 1:N, а в легенде M:N. По правилам курса имена таблиц как раз в единственном числе, и PK у `teacher` есть — `id [pk]`."},
+{type:"single", q:"Что означает «воронья лапка» (три расходящиеся линии) на конце связи в Crow’s Foot?",
+ opts:["Сторону «много»","Обязательность связи","Первичный ключ","Что связь запрещена"], correct:0,
+ expl:"Лапка = «много». Обязательность кодируется отдельно: чёрточка — «ровно один», кружок — «ноль допускается». Комбинация «кружок + лапка» читается как «ноль или много»."},
+{type:"single", q:"Кружок у конца связи в Crow’s Foot означает…",
+ opts:["Связь необязательна: допускается ноль","Ровно один","Много","Слабую сущность"], correct:0,
+ expl:"Кружок — минимум ноль (необязательность), чёрточка — ровно один, лапка — «много». Например, «у урока может не быть домашки» — это кружок со стороны домашки."},
+{type:"multi", q:"Где здесь связи M:N, требующие связующей таблицы?",
+ legend:"Библиотека: «Читатель берёт экземпляры книг на руки. У книги бывает несколько авторов, автор пишет много книг. У каждой книги в фонде несколько физических экземпляров».",
+ opts:["Книга — автор","Читатель — экземпляр (через факты выдачи)","Книга — экземпляр","Автор — читатель"], correct:[0,1],
+ expl:"Книга–автор — классическая M:N. Читатель–экземпляр тоже M:N во времени: один экземпляр за жизнь побывает у многих читателей — связующая таблица `loan` (выдача) с датами. Книга–экземпляр — 1:N: экземпляр принадлежит ровно одной книге. А связь автор–читатель легендой не задана — её додумывать нельзя."},
+{type:"single", q:"Какая сущность называется «слабой»?",
+ opts:["Которая не существует без родительской (например, строка заказа без заказа)","У которой мало атрибутов","Которая редко используется в запросах","У которой нет связей"], correct:0,
+ expl:"Слабая сущность живёт только в контексте родителя: строка заказа, попытка сдачи домашки, показание счётчика. Это же отвечает на вопрос «что удалять каскадно вместе с родителем»."},
+{type:"single", q:"Кейс онлайн-школы: промокод даёт процент скидки и действует до даты. К какой сущности его привязать?",
+ opts:["К покупке: promo_code_id в таблице покупки","К пользователю: поле promo_code у user","К курсу: поле promo_code у course","К оценке за домашнее задание"], correct:0,
+ expl:"Скидка применяется в момент конкретной покупки — значит, связь живёт у покупки. Привязка к пользователю не отвечает на вопрос «по какому промокоду купили именно этот курс»: один человек в разных покупках может использовать разные промокоды."},
+{type:"multi", q:"Один человек одновременно и ученик, и преподаватель. Какие способы моделирования корректны?",
+ opts:["Одна таблица person; роли задаются связями (записи в course_teacher и enrollment)","Таблица person + отдельные таблицы-роли teacher и student с FK на person","Две независимые таблицы student и teacher с дублированием ФИО и email","Одна таблица со столбцами name_student и name_teacher"], correct:[0,1],
+ expl:"Оба корректных варианта убирают дублирование персональных данных. Две независимые таблицы — ловушка из кейса: один человек живёт в двух аккаунтах, и данные разъезжаются. Выбор между «роли связями» и «таблицы-роли» зависит от того, есть ли у ролей собственные атрибуты."},
+{type:"single", q:"Средний балл ученика по курсу — хранить как атрибут или вычислять?",
+ opts:["Вычислять из оценок; хранить только при доказанной проблеме производительности","Хранить: так быстрее","Хранить в обеих таблицах для надёжности","Не хранить и не вычислять"], correct:0,
+ expl:"Хранимый агрегат — это денормализация: при каждой новой оценке его нужно пересчитывать, иначе рассинхрон. Стартовое решение — вычислять; кэшировать можно позже, когда профилирование покажет реальную проблему."},
+{type:"order", q:"Расставьте шаги построения ERD по порядку.",
+ items:["Определить связи и кардинальности","Выделить сущности из легенды","Сверить модель с легендой и записать допущения","Определить атрибуты и первичные ключи","Разрешить связи M:N связующими таблицами"],
+ seq:[1,3,0,4,2],
+ expl:"Сначала «существительные» (сущности), потом их свойства, затем связи между ними. Разрешение M:N — техническая операция над уже найденными связями, а сверка с легендой и запись допущений — обязательный финал: молчаливое допущение на защите считается ошибкой."},
+{type:"multi", q:"Отметьте все проблемы этой модели.",
+ legend:"Легенда: «Ученик сдаёт домашку к уроку, преподаватель может вернуть её на доработку несколько раз, нужна вся история попыток с оценками».",
+ code:`Table student_course {
+  id int [pk]
+  student_id int [ref: > person.id]
+  course_id int [ref: > course.id]
+  grade int
+  graded_at datetime
+}`,
+ opts:["История попыток схлопнута: одна оценка на запись о курсе вместо таблицы попыток сдачи","Оценка не привязана к уроку и домашнему заданию — непонятно, за что она поставлена","FK назван student_id, хотя ссылается на person — по правилам курса должен называться person_id","У связующей таблицы не должно быть собственного id","grade должен быть строкой, а не числом"], correct:[0,1,2],
+ expl:"Нужна отдельная сущность попытки сдачи (например, `submission`) со ссылками на домашнее задание и ученика, датой, оценкой и комментарием — тогда история сохраняется целиком. Собственный `id` у связующей таблицы допустим и часто удобен, а тип оценки легендой не регламентирован."},
+{type:"single", q:"Оценки ссылаются на преподавателя (graded_by). Что предусмотреть на случай его ухода из школы?",
+ opts:["Запретить физическое удаление и использовать soft delete, чтобы история оценок сохранилась","Каскадно удалять все его оценки","Обнулять graded_by у всех его оценок","Ничего: БД сама разберётся"], correct:0,
+ expl:"Оценки — значимая история. Каскадное удаление её сотрёт, NULL — обезличит. Стандартное решение: `ON DELETE RESTRICT` плюс признак «неактивен» (soft delete) у записи человека."},
+{type:"match", q:"Именование по правилам курса: подберите имя.",
+ items:[
+  {l:"Таблица заказов", a:0},
+  {l:"Внешний ключ на таблицу user", a:1},
+  {l:"Связующая таблица курс–преподаватель", a:2},
+  {l:"Первичный ключ любой таблицы", a:3}],
+ choices:["order","user_id","course_teacher","id"],
+ expl:"Единственное число, snake_case, PK — `id`, FK — `<таблица>_id`. Это конвенция курса и распространённая практика: по имени `user_id` сразу видно, на какую таблицу смотрит ссылка."}
+]},
+{
+id:"bpmn", nav:"BPMN", navSub:"Бизнес-процессы · 16 заданий",
+title:"BPMN — бизнес-процессы", eyebrow:"Модуль 2 · bpmn.io · draw.io",
+sub:"События, задачи, шлюзы, пулы и потоки. Ловушки — из кейсов «Возврат товара» и «Пропуск в бизнес-центр».",
+theory:`
+<h4>Легенда символов</h4>
+${LEGEND_BPMN}
+<h4>Основное</h4>
+<ul>
+<li><b>Задача</b> — глагол в инфинитиве + объект: «Проверить наличие товара». <b>Событие</b> — свершившийся факт: «Заявка поступила», «Пропуск выдан».</li>
+<li><b>XOR (×)</b> — выполнится ровно одна ветка (условия). <b>AND (+)</b> — все ветки параллельно; сливать обязательно парным AND, который дождётся все ветки.</li>
+<li><b>Пул</b> — независимый участник (организация, система); внутри пула — <b>дорожки</b>-роли. Между пулами — только поток сообщений (пунктир), sequence flow границу пула не пересекает.</li>
+<li>Стартовое событие — ровно одно на пул (если легенда не требует иного). Завершающих может быть несколько, каждое — с осмысленным именем результата.</li>
+<li>Косая черта на ветке шлюза — <b>поток по умолчанию</b>; событие с часами — <b>таймер</b>.</li>
+</ul>`,
+tasks:[
+{type:"match", q:"Сопоставьте символ BPMN и его смысл.",
+ items:[
+  {l:"Тонкий круг", a:0},
+  {l:"Круг с жирной границей", a:1},
+  {l:"Скруглённый прямоугольник", a:2},
+  {l:"Ромб с крестиком ×", a:3},
+  {l:"Ромб с плюсом +", a:4}],
+ choices:["Стартовое событие","Завершающее событие","Задача","Эксклюзивный шлюз (XOR)","Параллельный шлюз (AND)"],
+ expl:"Это алфавит нотации. Толщина границы круга отличает старт от финала; символ внутри ромба — тип шлюза. Путаница «× или +» — самая дорогая: она меняет логику всего процесса."},
+{type:"single", q:"Сколько стартовых событий должно быть в одном пуле (правило курса)?",
+ opts:["Ровно одно, если в легенде не сказано иное","Сколько угодно","Ни одного — процесс начинается с задачи","Два: основное и запасное"], correct:0,
+ expl:"Несколько стартов — почти всегда признак того, что в одну схему склеили разные процессы. Завершающих событий может быть несколько, но у каждого должен быть смысл: «Заявка отклонена», «Товар выдан»."},
+{type:"multi", q:"Отметьте правильно названные задачи.",
+ opts:["Проверить наличие товара","Оформить возврат","Проверка товара","Товар проверен"], correct:[0,1],
+ expl:"Задача — глагол в инфинитиве + объект: что нужно сделать. «Проверка товара» — существительное, «Товар проверен» — свершившийся факт, то есть событие, а не задача."},
+{type:"multi", q:"Отметьте правильно названные события.",
+ opts:["Заявка поступила","Пропуск выдан","Поступление заявки","Выдать пропуск"], correct:[0,1],
+ expl:"Событие — свершившийся факт в прошедшем времени. «Выдать пропуск» — это задача, а «Поступление заявки» — отглагольное существительное, по которому непонятно, момент это или процесс."},
+{type:"single", q:"Эксклюзивный шлюз (XOR) на разветвлении: сколько исходящих веток сработает?",
+ opts:["Ровно одна","Все сразу","Все ветки, где условие истинно","Ни одной"], correct:0,
+ expl:"XOR — «или/или»: токен уходит ровно в одну ветку. «Все сразу» — параллельный шлюз (AND); «все, где условие истинно» — включающий шлюз (OR), он встречается реже и сложнее в слиянии."},
+{type:"single", q:"Процесс разделили параллельным шлюзом (AND) на две ветки. Как правильно их слить?",
+ opts:["Парным параллельным шлюзом — он дождётся обе ветки","Просто свести стрелки в одну задачу","Эксклюзивным шлюзом XOR","Слияние не нужно"], correct:0,
+ expl:"AND-слияние синхронизирует: ждёт токен из каждой ветки и только потом пропускает процесс дальше. Если слить XOR-ом или просто свести стрелки, продолжение выполнится дважды — по разу на каждый токен."},
+{type:"single", q:"Чем пул отличается от дорожки?",
+ opts:["Пул — независимый участник (организация, система); дорожка — роль внутри участника","Ничем, это синонимы","Пул — для людей, дорожка — для систем","Дорожка — это подпроцесс"], correct:0,
+ expl:"Внутри пула течёт единый процесс, а дорожки распределяют ответственность: менеджер, склад, бухгалтерия. Между пулами общего потока управления нет — только обмен сообщениями."},
+{type:"single", q:"Задачи в разных пулах соединяют…",
+ opts:["Потоком сообщений (пунктирная стрелка)","Обычным sequence flow","Ассоциацией","Соединять нельзя вообще"], correct:0,
+ expl:"Sequence flow не пересекает границу пула — у каждого участника свой поток управления. Взаимодействие между пулами — это message flow: «отправили заявку — получили ответ»."},
+{type:"multi", q:"Перед вами схема процесса «Возврат товара». Отметьте все ошибки.",
+ diagram:"b9",
+ opts:["Стартовое событие названо не как факт — должно быть «Заявка на возврат поступила»","«Заявка» — не задача: имя задачи — глагол + объект","Ветки взаимоисключающие, а шлюз параллельный — нужен XOR с условиями","Завершающие события безымянные — непонятен результат процесса","В схеме слишком мало задач","Обязательно нужно два пула"], correct:[0,1,2,3],
+ expl:"Четыре ошибки: именование старта («Получение заявки» — не факт), именование задачи, неверный тип шлюза (возврат и отклонение не могут случиться одновременно) и безымянные финалы. Количество задач и пулов легендой не регламентируется."},
+{type:"order", q:"Соберите процесс «Пропуск в бизнес-центр» в правильном порядке.",
+ items:["Оформить пропуск","Заявка на пропуск поступила","Согласовать визит с принимающим сотрудником","Проверить данные посетителя","Пропуск выдан"],
+ seq:[1,3,2,0,4],
+ expl:"Процесс начинается событием-фактом и заканчивается событием-результатом, а между ними — задачи-глаголы. Проверка данных идёт до согласования: нет смысла согласовывать визит посетителя, которого не удалось идентифицировать."},
+{type:"single", q:"Одна из веток XOR-шлюза помечена косой чертой. Что это?",
+ opts:["Поток по умолчанию: сработает, если ни одно условие не истинно","Запрещённый переход","Самая частая ветка","Ветка с ошибкой"], correct:0,
+ expl:"Default flow страхует процесс от «зависания»: если все условия ложны, токен уйдёт по ветке с косой чертой. Без него процесс с неполными условиями просто остановится."},
+{type:"single", q:"Событие с пиктограммой часов означает…",
+ opts:["Таймер: ожидание срока или запуск по времени («через 3 дня», «каждый понедельник»)","Что задача выполняется долго","Рабочее время сотрудника","Дедлайн всего проекта"], correct:0,
+ expl:"Событие-таймер запускает или продолжает процесс по времени: «клиент не ответил за 3 дня — эскалировать». Прикреплённый к границе задачи, таймер задаёт тайм-аут именно этой задачи."},
+{type:"multi", q:"Где нужен параллельный шлюз (AND)?",
+ opts:["Проверить оплату и проверить наличие на складе можно одновременно","Одновременно отправить клиенту SMS и email","Если оплата не прошла — отменить заказ, иначе — собрать","Клиент выбирает способ доставки: курьер или самовывоз"], correct:[0,1],
+ expl:"AND — про независимые работы, которые идут одновременно. Условия и выбор — территория XOR: там всегда выполняется ровно одна ветка."},
+{type:"single", q:"Схема заканчивается задачей «Выдать товар», завершающего события нет. Это ошибка?",
+ opts:["Да: процесс должен завершаться событием с осмысленным результатом","Нет, событие в конце не обязательно","Ошибка, только если в схеме есть шлюзы","Нужно завершать процесс шлюзом"], correct:0,
+ expl:"Читатель схемы должен видеть, чем всё закончилось: «Товар выдан», «Заявка отклонена». Финалов может быть несколько — по одному на каждый осмысленный исход."},
+{type:"match", q:"Каким элементом это показать?",
+ items:[
+  {l:"Связать две задачи внутри одного пула", a:0},
+  {l:"Передать заявку из пула клиента в пул магазина", a:1},
+  {l:"Показать, что задача использует документ", a:2},
+  {l:"Отметить ветку «иначе» у шлюза", a:3}],
+ choices:["Sequence flow (сплошная стрелка)","Message flow (пунктирная стрелка)","Ассоциация с объектом данных","Косая черта на потоке (default flow)"],
+ expl:"Сплошная стрелка — порядок работ внутри участника; пунктирная — сообщения между участниками; документы и данные подключаются ассоциациями; «иначе» — косая черта у исходящего потока шлюза."},
+{type:"single", q:"AND-шлюз разделил процесс на две ветки, а слили их шлюзом XOR. Что произойдёт при выполнении?",
+ opts:["Всё после слияния выполнится дважды — по токену из каждой ветки","Ничего, так тоже правильно","Процесс зависнет навсегда","Одна из веток отменится"], correct:0,
+ expl:"XOR-слияние пропускает каждый пришедший токен дальше, не дожидаясь остальных. Два токена на входе — два прохода после слияния: письмо клиенту уйдёт дважды. Обратная ошибка (AND-слияние после XOR-разветвления) даёт вечное ожидание недостающего токена."}
+]},
+{
+id:"uml", nav:"UML", navSub:"Use case · Activity · Sequence · 12 заданий",
+title:"UML — сценарии и взаимодействия", eyebrow:"Модуль 3 · PlantUML · draw.io",
+sub:"Три диаграммы из лекции: use case (что умеет система), activity (как идёт сценарий), sequence (кто кого вызывает). Кейсы: фитнес-клуб, публикация статьи, оплата заказа.",
+theory:`
+<h4>Use case</h4>
+<ul>
+<li><b>Актор</b> — внешняя роль: человек или другая система. Всегда за границей системы.</li>
+<li>Имя use case отвечает на вопрос «что актор хочет сделать в системе?»: глагол + объект («Забронировать занятие»).</li>
+<li><b>include</b> — обязательное включение общего шага; <b>extend</b> — опциональное расширение. Направления стрелок противоположны.</li>
+</ul>
+<h4>Activity</h4>
+<ul>
+<li>Ромб — решение (одна ветка по условию); чёрная полоса — fork/join (параллельность). После fork обязателен join.</li>
+</ul>
+<h4>Sequence</h4>
+<ul>
+<li>Время течёт <b>сверху вниз</b> вдоль линий жизни участников.</li>
+<li>Сплошная стрелка с закрашенным наконечником — синхронный вызов; пунктирная — ответ; сплошная с открытым наконечником — асинхронное сообщение.</li>
+<li>Рамки-фрагменты: <code>alt</code> — если/иначе, <code>opt</code> — необязательный блок, <code>loop</code> — цикл, <code>par</code> — параллельно.</li>
+</ul>`,
+tasks:[
+{type:"single", q:"Кто такой актор на use case диаграмме?",
+ opts:["Внешняя по отношению к системе роль: человек или другая система","Любой пользователь из таблицы user","Модуль самой системы","Администратор базы данных"], correct:0,
+ expl:"Актор всегда снаружи границы системы. Это роль, а не должность и не конкретный человек: один человек может выступать в двух ролях, а платёжный шлюз — полноправный актор-система."},
+{type:"multi", q:"Отметьте корректные имена вариантов использования (фитнес-клуб).",
+ opts:["Забронировать занятие","Отменить бронь","Бронирование","База данных занятий"], correct:[0,1],
+ expl:"Вопрос-подсказка курса: «Что актор хочет сделать в системе?» — глагол + объект. «Бронирование» на него не отвечает, а «База данных занятий» — вообще не поведение, а внутренняя деталь системы, которой на use case диаграмме не место."},
+{type:"single", q:"«Оплатить абонемент» всегда требует шага «Авторизоваться». Какая связь между этими use case?",
+ opts:["include: обязательное включение общего шага","extend: опциональное расширение","Наследование акторов","Обычная ассоциация"], correct:0,
+ expl:"include — «всегда выполняется в составе»; extend — «иногда дополняет» (например, «Применить промокод» extends «Оплатить абонемент»). Стрелки у include и extend направлены в противоположные стороны — это частая путаница на защите."},
+{type:"single", q:"Может ли актором быть внешняя система, например платёжный шлюз?",
+ opts:["Да: актор — любой внешний участник, не только человек","Нет, акторы — только люди","Только если у неё есть пользовательский интерфейс","Только на диаграмме компонентов"], correct:0,
+ expl:"Если внешняя система инициирует взаимодействие или получает данные — она актор. Классика: платёжный шлюз, госсервисы, планировщик, запускающий процесс по расписанию."},
+{type:"single", q:"Activity-диаграмма: чем ромб (решение) отличается от чёрной полосы (fork)?",
+ opts:["Ромб выбирает одну ветку по условию; fork запускает ветки параллельно","Ничем, оба ветвят поток","Ромб — для ошибок, fork — для нормального хода","Fork выбирает одну ветку, ромб — все"], correct:0,
+ expl:"Это прямые аналоги шлюзов BPMN: ромб — XOR, полоса fork — AND. После fork обязательно нужна точка синхронизации join, где параллельные ветки соединяются."},
+{type:"order", q:"Соберите activity-сценарий «Публикация статьи».",
+ items:["Принять решение о публикации","Статья получена от автора","Опубликовать статью","Проверить статью редактором","Статья опубликована"],
+ seq:[1,3,0,2,4],
+ expl:"На полной диаграмме после «Принять решение» стоит ромб: ветка «нужны правки» возвращает статью автору и образует цикл, а ветка «одобрено» ведёт к публикации и финальному состоянию."},
+{type:"single", q:"После fork на activity-диаграмме идут две параллельные ветки. Что обязательно нужно дальше?",
+ opts:["join — синхронизировать ветки перед продолжением (или довести каждую до своего финала)","Ничего, ветки сольются сами","Ромб решения","Ещё один fork"], correct:0,
+ expl:"Как и в BPMN: параллельные потоки либо синхронизируются join-полосой, либо каждый явно доводится до конечного узла. «Повисшие» ветки — ошибка, которую ищут при проверке."},
+{type:"multi", q:"Что показывает activity-диаграмма, чего не видно на use case?",
+ opts:["Порядок шагов","Ветвления по условиям","Параллельные действия","Полный список акторов системы"], correct:[0,1,2],
+ expl:"Use case отвечает «что система умеет и для кого», activity — «как разворачивается конкретный сценарий по шагам». Не пытайтесь передать порядок выполнения стрелками между эллипсами use case — это разные уровни."},
+{type:"single", q:"Sequence: сплошная стрелка с закрашенным наконечником — это…",
+ opts:["Синхронный вызов: отправитель ждёт ответа","Ответ на вызов","Асинхронное сообщение","Создание объекта"], correct:0,
+ expl:"Синхронный вызов — сплошная с закрашенным наконечником, ответ — пунктирная, асинхронное сообщение — сплошная с открытым наконечником. Прямоугольник на линии жизни (активация) показывает, что участник занят обработкой."},
+{type:"single", q:"Что такое линия жизни (lifeline) на sequence-диаграмме?",
+ opts:["Участник взаимодействия и его вертикальная ось времени","Срок жизни всей системы","Стрелка между объектами","Условие в alt-блоке"], correct:0,
+ expl:"Время на sequence течёт сверху вниз вдоль пунктирной вертикали каждого участника. Порядок стрелок по вертикали — это и есть порядок событий."},
+{type:"multi", q:"Описание sequence «Оплата заказа»: браузер вызывает БД напрямую («получить заказ», сплошная стрелка); БД отвечает тоже сплошной стрелкой; стрелки нарисованы по горизонтальной оси времени слева направо. Отметьте ошибки.",
+ opts:["Ответ должен быть пунктирной стрелкой, а не сплошной","Время на sequence течёт сверху вниз, а не слева направо","Браузер не должен обращаться к БД напрямую — между ними сервис/API","Участников слишком много"], correct:[0,1,2],
+ expl:"Первые две ошибки — нотация. Третья — про смысл диаграммы: sequence обычно показывает слои (клиент → API → сервис → БД), и «срезание» слоя на диаграмме прячет реальную интеграцию, которую придётся разрабатывать."},
+{type:"single", q:"Фрагмент alt на sequence-диаграмме означает…",
+ opts:["Альтернативу: выполнится одна из секций в зависимости от условия","Повторение секции в цикле","Необязательную секцию","Параллельное выполнение"], correct:0,
+ expl:"alt — это if/else с условиями-guard в квадратных скобках, и условие обязательно у каждой секции. loop — цикл, opt — «выполнится или нет», par — параллельно."}
+]},
+{
+id:"dfd", nav:"DFD", navSub:"Потоки данных · 8 заданий",
+title:"DFD — потоки данных", eyebrow:"Модуль 4 · draw.io · miro",
+sub:"Процессы, внешние сущности, хранилища и именованные потоки. Кейс — личный кабинет ЖКХ.",
+theory:`
+<h4>Четыре элемента</h4>
+<ul>
+<li><b>Процесс</b> — преобразует данные (имя — глагол: «Рассчитать начисления»).</li>
+<li><b>Внешняя сущность</b> — источник или приёмник данных вне системы (житель, банк).</li>
+<li><b>Хранилище</b> — место, где данные лежат между использованиями.</li>
+<li><b>Поток данных</b> — стрелка, подписанная данными-существительным («показания счётчика»).</li>
+</ul>
+<h4>Правила</h4>
+<ul>
+<li>DFD не показывает порядок шагов и решения — только откуда, куда и какие данные движутся.</li>
+<li>Данные не текут сами: между двумя сущностями или двумя хранилищами всегда стоит процесс.</li>
+<li><b>Контекстная диаграмма</b> — один процесс-система + окружение. При декомпозиции входы/выходы уровней должны совпадать (балансировка).</li>
+<li>Процесс без входов — «чудо», без выходов — «чёрная дыра». Оба — ошибка.</li>
+</ul>`,
+tasks:[
+{type:"match", q:"Сопоставьте элемент DFD и его роль.",
+ items:[
+  {l:"Процесс", a:0},
+  {l:"Внешняя сущность", a:1},
+  {l:"Хранилище", a:2},
+  {l:"Поток данных", a:3}],
+ choices:["Преобразует входные данные в выходные","Источник или приёмник данных вне системы","Место, где данные лежат между использованиями","Именованное перемещение данных стрелкой"],
+ expl:"В DFD нет порядка выполнения и решений — только движение данных. Если хочется нарисовать «а потом…» — это сигнал, что нужна BPMN или activity, а не DFD."},
+{type:"single", q:"Главное отличие DFD от BPMN?",
+ opts:["DFD показывает движение данных без порядка шагов; BPMN — последовательность работ","DFD просто подробнее, чем BPMN","BPMN — про данные, DFD — про процессы","Отличий нет"], correct:0,
+ expl:"По DFD нельзя ответить, «что происходит сначала», и это нормально: вопрос диаграммы — «какие данные, откуда и куда». Порядок и решения — территория BPMN."},
+{type:"multi", q:"Что запрещено в DFD?",
+ opts:["Поток данных напрямую между двумя внешними сущностями","Поток из хранилища в хранилище без процесса между ними","Поток данных без названия","Процесс с несколькими входами и выходами"], correct:[0,1,2],
+ expl:"Данные не перемещаются сами — между сущностями и хранилищами всегда стоит процесс. Потоки подписываются данными («показания счётчика»); исключение иногда делают только для очевидных потоков в хранилище и из него. Несколько входов и выходов у процесса — норма."},
+{type:"single", q:"Контекстная диаграмма (уровень 0) — это…",
+ opts:["Один процесс — вся система, вокруг — внешние сущности и потоки","Самая подробная схема всех модулей","Диаграмма без потоков данных","Схема серверов и сетей"], correct:0,
+ expl:"Контекстная диаграмма отвечает на вопрос о границе: что — система, а что — окружение. Декомпозиция на подпроцессы начинается со следующего уровня."},
+{type:"single", q:"Что такое балансировка уровней при декомпозиции DFD?",
+ opts:["Входы и выходы дочерней диаграммы совпадают с потоками родительского процесса","Одинаковое число процессов на каждом уровне","Симметричное расположение элементов","Равное количество хранилищ и сущностей"], correct:0,
+ expl:"Если на уровне 0 в процесс входят «показания» и выходит «квитанция», то на его декомпозиции обязаны быть ровно те же входы и выходы — иначе уровни противоречат друг другу."},
+{type:"multi", q:"Личный кабинет ЖКХ: отметьте внешние сущности.",
+ opts:["Житель","Платёжный шлюз банка","Хранилище показаний счётчиков","Процесс «Рассчитать начисления»"], correct:[0,1],
+ expl:"Внешняя сущность находится вне системы. Хранилище и процесс — внутренние элементы самой DFD; их легко перепутать с сущностями, если рисовать всё одинаковыми прямоугольниками — следите за нотацией."},
+{type:"single", q:"Как правильно назвать поток данных?",
+ opts:["Существительным-данными: «показания счётчика», «квитанция»","Глаголом: «передать показания»","Именем процесса-получателя","Можно не называть"], correct:0,
+ expl:"Поток — это сами данные, а не действие. Глаголы живут в именах процессов («Рассчитать начисления»), а стрелки подписываются тем, что по ним течёт."},
+{type:"single", q:"У процесса на DFD есть выходной поток, но нет ни одного входного. Как это называется и что это значит?",
+ opts:["«Чудо» (miracle): процесс порождает данные из ничего — ошибка модели","Нормальная ситуация для стартовых процессов","«Чёрная дыра» — так и должно быть","Просто забыли стрелку, ошибкой не считается"], correct:0,
+ expl:"Процесс без входов — «чудо», без выходов — «чёрная дыра». Оба сигнализируют: либо потерян поток, либо процесс лишний. На проверке это ищут в первую очередь."}
+]},
+{
+id:"pick", nav:"Выбор нотации", navSub:"Ситуации · 12 заданий",
+title:"Какая диаграмма нужна?", eyebrow:"Модуль 5 · Кейсы-ситуации",
+sub:"Заказчик говорит словами, а не нотациями. Прочитайте запрос и решите, какую диаграмму строить — это первое решение аналитика в любом кейсе.",
+theory:`
+<h4>Шпаргалка выбора</h4>
+<ul>
+<li>Вопрос про <b>структуру данных и связи</b> («какие таблицы», «сколько у кого чего») → <b>ERD</b>.</li>
+<li>Вопрос про <b>порядок работ, ответственных, условия и сроки</b> → <b>BPMN</b>.</li>
+<li>Вопрос «<b>что система умеет и для кого</b>» (объём системы, договор) → <b>Use case</b>.</li>
+<li>Один <b>сценарий по шагам</b> с ветвлениями и параллельностью внутри команды → <b>Activity</b>.</li>
+<li>Вопрос «<b>кто кого вызывает</b>, в каком порядке, что синхронно» → <b>Sequence</b>.</li>
+<li>Вопрос «<b>какие данные, откуда и куда</b>» (аудит, интеграции, ПДн) → <b>DFD</b>.</li>
+</ul>
+<p>Подсказка: слушайте, <i>какой вопрос задаст читатель диаграммы</i>, а не какие слова употребил заказчик.</p>`,
+tasks:[
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Заказчик: «Хочу наконец понять, какие таблицы будут в базе — клиенты, заказы, товары — и как они друг с другом связаны».",
+ opts:["ERD","BPMN","UML Use Case","DFD"], correct:0,
+ expl:"«Таблицы и связи» — вопрос о структуре данных. Это ERD: сущности, атрибуты, ключи, кардинальности."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Операционный директор: «Покажите, как заявка на возврат ходит между поддержкой, складом и бухгалтерией: кто за что отвечает, какие условия, какие сроки».",
+ opts:["BPMN","ERD","UML Sequence","DFD"], correct:0,
+ expl:"Роли-участники, порядок работ, условия и сроки — классический запрос на BPMN: дорожки, шлюзы с условиями, события-таймеры."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Юрист: «В приложение к договору с подрядчиком нужен перечень всего, что пользователи смогут делать в системе, — и какие именно пользователи».",
+ opts:["UML Use Case","BPMN","UML Activity","ERD"], correct:0,
+ expl:"«Что система умеет и для кого» — use case диаграмма: акторы, варианты использования, граница системы. Именно её кладут в договор, чтобы зафиксировать объём."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Техлид: «Фронт, сервис заказов и платёжный шлюз: кто кого вызывает, в каком порядке, что синхронно, а что нет, где таймаут. Надо зафиксировать контракт взаимодействия».",
+ opts:["UML Sequence","BPMN","UML Use Case","ERD"], correct:0,
+ expl:"Вызовы между компонентами во времени, синхронность, таймауты — это sequence-диаграмма. По ней разработчики договариваются об API."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Аудитор по персональным данным: «Какие данные попадают в систему, где они хранятся и каким внешним системам передаются?»",
+ opts:["DFD","BPMN","ERD","UML Activity"], correct:0,
+ expl:"Аудитора не интересует порядок шагов — только движение данных: источники, хранилища, получатели. Это DFD, любимая диаграмма аудитов и интеграционных обследований."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Главред: «Распишите путь одной статьи по шагам: проверка редактором, цикл доработки, параллельная работа корректора и бильд-редактора».",
+ opts:["UML Activity","UML Use Case","ERD","DFD"], correct:0,
+ expl:"Один сценарий по шагам с ветвлениями, циклом и параллельностью внутри одной команды — activity-диаграмма с дорожками. BPMN — близкий сосед, но здесь нет обмена между организациями, а запрос звучит как «путь одного сценария»."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Методист онлайн-школы: «Мы спорим, сколько преподавателей может вести курс и где хранить историю попыток сдачи домашки».",
+ opts:["ERD","BPMN","UML Sequence","UML Use Case"], correct:0,
+ expl:"«Сколько у кого чего» — вопрос кардинальности, «где хранить историю» — вопрос сущностей. Оба решаются на ERD."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Продакт: «Надо объяснить разработчикам: если платёжный шлюз молчит 30 секунд — клиент получает ошибку, а не крутящийся спиннер навечно».",
+ opts:["UML Sequence","DFD","UML Use Case","ERD"], correct:0,
+ expl:"Таймаут конкретного вызова между компонентами — деталь взаимодействия во времени. Sequence: вызов, полоса активации, таймаут, альтернативный ответ."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Регулятор: «Покажите, как данные о начислениях и платежах передаются из вашей системы в ГИС ЖКХ».",
+ opts:["DFD","BPMN","UML Activity","ERD"], correct:0,
+ expl:"Вопрос «какие данные и куда передаются» — DFD: система, внешняя сущность ГИС ЖКХ и именованные потоки данных между ними."},
+{type:"single", q:"Какую диаграмму строить?",
+ legend:"Управляющий бизнес-центром: «Опишите, кто кому что отправляет при заказе пропуска: компания-арендатор, наше бюро пропусков, охрана. Это разные организации».",
+ opts:["BPMN","UML Use Case","ERD","DFD"], correct:0,
+ expl:"Несколько независимых организаций, обменивающихся сообщениями, — BPMN с пулами и message flow. Внутри пула бизнес-центра бюро и охрана станут дорожками."},
+{type:"multi", q:"Что вы сможете показать на BPMN, но не сможете на ERD?",
+ opts:["Порядок выполнения шагов","Ответственных за каждый шаг (дорожки)","События по времени: «через 3 дня», «в полночь»","Кардинальности связей между сущностями"], correct:[0,1,2],
+ expl:"BPMN отвечает «кто, что и когда делает», ERD — «какие данные и как связаны». Кардинальности — территория ERD; порядка шагов там нет вовсе."},
+{type:"single", q:"Как поступить?",
+ legend:"Продакт: «Нарисуйте мне одну диаграмму сразу про всё: и таблицы, и процесс, и вызовы сервисов — чтобы всем всё было понятно».",
+ opts:["Объяснить, что разные вопросы — разные диаграммы, и выбрать по главному вопросу читателя","Нарисовать всё в одной — заказчик всегда прав","Взять BPMN: она самая подробная и покроет всё","Отказаться: без ТЗ диаграмм не бывает"], correct:0,
+ expl:"Диаграмма «про всё» не отвечает ни на один вопрос: у каждой нотации свой читатель. Правильный ход аналитика — спросить, какое решение будет принимать читатель, и дать под это одну–две подходящие диаграммы."}
+]},
+{
+id:"mini", nav:"Мини-кейсы", navSub:"Решения аналитика · 10 заданий",
+title:"Мини-кейсы: одно решение за раз", eyebrow:"Модуль 6 · Реплика заказчика → конструкция",
+sub:"Короткая ситуация из практикума — и одно проектное решение. Ищите в реплике ключевое слово-требование: «история», «одновременно», «только после», «не должно тормозить».",
+theory:`
+<h4>Слова-маркеры в речи заказчика</h4>
+<ul>
+<li>«…даже если потом изменили», «вся история» → <b>историчность</b>: отдельная таблица или копия значения на момент события.</li>
+<li>«одновременно», «не ждут друг друга», «когда готовы оба» → <b>AND / fork+join</b>.</li>
+<li>«если… то…», «либо-либо» → <b>XOR / решение</b> с условиями.</li>
+<li>«через N дней», «в полночь», «за 5 минут» → <b>событие-таймер</b>.</li>
+<li>«не должно тормозить», «в фоне» → <b>асинхронное сообщение</b>.</li>
+<li>«это другая организация», «их система» → <b>отдельный пул</b>, message flow.</li>
+</ul>`,
+tasks:[
+{type:"single", q:"Как выполнить требование в модели данных?",
+ legend:"Каршеринг, финансовый директор: «Тариф меняется раз в месяц, но нам критично знать, по какому тарифу считалась конкретная поездка — даже если тариф потом изменили».",
+ opts:["Хранить в поездке ссылку на версию тарифа или копию значений на момент поездки","Читать цену из текущего тарифа при формировании чека","Запретить менять тарифы","Хранить тариф полями в таблице автомобиля"], correct:0,
+ expl:"Маркер — «даже если потом изменили»: нужна историчность. Либо версионируем тариф и храним ссылку на версию, либо копируем значения в поездку. Чтение из текущего тарифа «переоценит» все прошлые чеки — главная ловушка кейса про каршеринг."},
+{type:"single", q:"Как показать это в BPMN?",
+ legend:"Возврат товара, бухгалтерия: «Списание не прошло — повторяем попытку на следующий день, и так до трёх раз. После третьей неудачи передаём кейс менеджеру».",
+ opts:["Цикл: XOR «прошло?» + событие-таймер «следующий день»; после третьей неудачи — ветка к менеджеру","Задача «Подождать один день» между попытками","Три одинаковые задачи «Списать деньги» подряд","Текстовое примечание на диаграмме"], correct:0,
+ expl:"«На следующий день» — событие-таймер, а не задача: ждать — это не работа. Ограничение «до трёх раз» — условие выхода из цикла, после которого токен уходит в ветку ручной обработки."},
+{type:"single", q:"Какой связью соединить use case?",
+ legend:"Фитнес-клуб, продакт: «При оплате абонемента можно применить промокод — но это по желанию, большинство платит без него».",
+ opts:["«Применить промокод» extend «Оплатить абонемент»","«Применить промокод» include «Оплатить абонемент»","Отдельный use case без связи с оплатой","Завести актора «Промокод»"], correct:0,
+ expl:"Маркер — «по желанию»: опциональное дополнение — это extend. Include означал бы, что без промокода оплата невозможна. Промокод — не роль, актором он быть не может."},
+{type:"single", q:"Как смоделировать людей в ERD?",
+ legend:"Онлайн-школа, бухгалтер: «У нас есть преподаватели, которые сами учатся на других наших курсах. Заводить их дважды неудобно — они путаются в двух аккаунтах».",
+ opts:["Одна таблица person; роли задаются связями (записи преподавания и записи на курс)","Две таблицы student и teacher — так понятнее","Столбец is_teacher_and_student в таблице student","Оставить как есть и вести реестр совпадений в Excel"], correct:0,
+ expl:"Человек один — запись одна, роли задаются связями. Две таблицы дублируют ФИО и email и дают тот самый эффект «двух аккаунтов», на который жалуется заказчик."},
+{type:"single", q:"Как показать это в BPMN?",
+ legend:"Доставка еды, CEO: «Ресторан обязан принять или отклонить заказ за 5 минут — иначе заказ автоматически отменяется и деньги возвращаются клиенту».",
+ opts:["Ожидание ответа + событие-таймер 5 минут; по таймеру — ветка «Заказ отменён» со снятием холда","Шлюз XOR «прошло 5 минут?» без таймера","Задача «Ждать 5 минут» в дорожке платформы","Сноска «отменяем через 5 минут» под диаграммой"], correct:0,
+ expl:"«Автоматически, по времени» — событие-таймер (обычно событийный шлюз: что наступит раньше — ответ ресторана или таймер). Не забудьте: ветка отмены обязана снять холд — иначе деньги зависнут."},
+{type:"single", q:"Как показать это на sequence?",
+ legend:"Интернет-магазин, продакт: «После оплаты клиент получает письмо, но отправка письма не должна тормозить ответ пользователю».",
+ opts:["Асинхронное сообщение в сервис уведомлений — ответ клиенту его не ждёт","Синхронный вызов почтового сервиса до ответа клиенту","Убрать письмо из сценария — лишняя деталь","Отправлять письмо из браузера клиента"], correct:0,
+ expl:"«Не должно тормозить» — асинхронность: стрелка с открытым наконечником, без ожидания ответа. Синхронный вызов до ответа — ловушка: ответ пользователю «тормозит» об почтовый сервер."},
+{type:"single", q:"Как расположить участника на BPMN?",
+ legend:"Бизнес-центр: «Заявки на пропуска нам присылают компании-арендаторы из своих внутренних систем. Их процессы мы не контролируем».",
+ opts:["Арендатор — отдельный пул; взаимодействие с БЦ — потоками сообщений","Арендатор — дорожка внутри пула бизнес-центра","Арендатора на диаграмме не показывать","Объединить все стороны в один пул без дорожек"], correct:0,
+ expl:"Маркер — «их процессы мы не контролируем»: это независимый участник, то есть пул. Дорожка означала бы, что арендатор подчиняется потоку управления БЦ — а это не так."},
+{type:"single", q:"Что это значит для DFD?",
+ legend:"ЖКХ, поддержка: «Новое показание не может быть меньше прошлого — при приёме сверяем с историей показаний».",
+ opts:["Процессу «Принять показания» нужен входной поток из хранилища показаний","Поток от жителя сразу в хранилище, минуя процесс","Проверки на DFD не отражаются никак","Завести поток из хранилища показаний в хранилище начислений"], correct:0,
+ expl:"Раз процесс сверяет с историей — он читает хранилище: на DFD это входной поток «прошлые показания» в процесс приёма. Поток «мимо процесса» и «хранилище→хранилище» — запрещённые конструкции."},
+{type:"single", q:"Как смоделировать доступ в ERD?",
+ legend:"Онлайн-школа, поддержка: «Нужно видеть, когда ученик открыл доступ к курсу и до какого числа он действует. Доступ может продлеваться».",
+ opts:["Сущность «доступ» (ученик, курс, дата начала, дата окончания) + история продлений","Поле paid_until в таблице user","Поле access_date в таблице course","Хранить продления в логах приложения"], correct:0,
+ expl:"Доступ связывает ученика и курс и живёт во времени — это сущность (по сути, связующая таблица с атрибутами). Поле в user не отвечает «к какому курсу», поле в course — «у какого ученика»."},
+{type:"single", q:"Какая конструкция нужна на activity?",
+ legend:"Онлайн-медиа, редактор: «Корректор вычитывает текст, бильд-редактор подбирает иллюстрации — друг друга не ждут. Но публикация — только когда готовы оба».",
+ opts:["fork на две параллельные ветки + join перед публикацией","Ромб решения: либо корректор, либо бильд","Две отдельные диаграммы — по одной на роль","Последовательно: сначала корректор, потом бильд"], correct:0,
+ expl:"«Не ждут друг друга» — fork; «когда готовы оба» — join. Ромб заставил бы выбрать одного из двух, последовательность — ждать; и то и другое противоречит легенде."}
+]},
+{
+id:"quest", nav:"Сквозной кейс", navSub:"Доставка еды · 10 шагов",
+title:"Сквозной кейс: агрегатор доставки еды", eyebrow:"Модуль 7 · Один кейс — все нотации",
+sub:"Пройдите путь аналитика по одной легенде: от выделения сущностей до sequence-диаграммы оплаты. Шаги идут в том порядке, в котором работает настоящий аналитик.",
+theory:`
+<h4>Легенда кейса (общая для всех шагов)</h4>
+<p>Стартап делает агрегатор доставки еды. Клиент выбирает ресторан, собирает корзину из блюд и оплачивает — деньги <b>холдируются</b>, списание после доставки. Ресторан обязан принять или отклонить заказ <b>за 5 минут</b>, иначе автоотмена и возврат денег. Курьера ищут после подтверждения ресторана; курьер <b>может отказаться</b> — тогда заказ предлагают следующему. Цены и стоп-лист меняются в течение дня, но клиент платит <b>цену на момент заказа</b>. Клиент видит <b>статусы в реальном времени</b>; пуши не должны тормозить процесс. Отзыв можно оставить в течение 7 дней.</p>`,
+tasks:[
+{type:"multi", q:"Шаг 1 · ERD. Что из легенды станет сущностями?",
+ opts:["Клиент","Заказ","Ресторан","Блюдо","Курьер","«Собрать корзину»","«Быстро доставить»"], correct:[0,1,2,3,4],
+ expl:"Сущности — «существительные», о которых храним данные. «Собрать корзину» — действие (процесс, а не сущность), «быстро» — требование к качеству, а не объект."},
+{type:"single", q:"Шаг 2 · ERD. Кардинальность связи заказ — ресторан?",
+ legend:"Заказ всегда оформляется из одного ресторана; ресторан получает много заказов.",
+ opts:["1:N — у ресторана много заказов, заказ принадлежит одному ресторану","1:1","M:N","Зависит от города"], correct:0,
+ expl:"Читаем с двух сторон: у одного ресторана заказов много; у одного заказа ресторан один. «Много» только с одной стороны — 1:N, связующая таблица не нужна."},
+{type:"single", q:"Шаг 3 · ERD. Заказ и блюдо: как смоделировать?",
+ legend:"В заказе несколько блюд, каждое — в своём количестве; одно и то же блюдо встречается в тысячах заказов.",
+ opts:["Связующая таблица order_item: order_id, dish_id, количество","FK dish_id прямо в таблице order","Список блюд строкой в поле dishes","Оставить M:N без связующей таблицы — база разберётся"], correct:0,
+ expl:"Заказ—блюдо — M:N, разрешается через `order_item`. Бонус: у связи есть собственный атрибут (количество) — ещё один признак, что нужна отдельная таблица."},
+{type:"single", q:"Шаг 4 · ERD. «Клиент платит цену на момент заказа, даже если через минуту её подняли». Где хранить цену?",
+ opts:["Копией в order_item — фиксируется при оформлении заказа","Только в меню (таблица dish) — зачем дублировать","В таблице клиента","Пересчитывать из актуального меню при каждом просмотре"], correct:0,
+ expl:"Тот же приём, что с тарифом каршеринга: историчность. Цена в `order_item` — снимок на момент сделки; цена в `dish` — актуальная витрина. Это одно из немногих мест, где «дублирование» — не ошибка, а требование."},
+{type:"single", q:"Шаг 5 · ERD. «Клиент видит статусы в реальном времени, финансам нужна история операций». Как хранить статус заказа?",
+ opts:["Таблица истории статусов: заказ, статус, момент времени","Поле status в order, перезаписывать при смене","Булево поле is_delivered","Статус в названии заказа"], correct:0,
+ expl:"Маркер «история» → отдельная таблица. Поле `status` в `order` может остаться как «текущий статус» для быстрого чтения — но источник правды всей истории — таблица переходов со временем."},
+{type:"single", q:"Шаг 6 · BPMN. Клиент, платформа, ресторан, курьер — как разложить по схеме?",
+ opts:["Каждый — отдельный пул; между пулами — потоки сообщений","Все — дорожки одного пула «Доставка еды»","Ресторан и курьер — дорожки внутри пула платформы","Один пул без дорожек, участников подписать текстом"], correct:0,
+ expl:"Ресторан и курьер — независимые партнёры со своими процессами, платформа ими не управляет напрямую — только обменивается сообщениями. Курьер-«дорожка платформы» — ловушка командного кейса 9."},
+{type:"single", q:"Шаг 7 · BPMN. «Ресторан молчит 5 минут — автоотмена и возврат денег». Как показать?",
+ opts:["Событийный шлюз: ответ ресторана или таймер 5 минут; по таймеру — «Заказ отменён» + снятие холда","Задача «Ждать 5 минут» в дорожке платформы","XOR «прошло 5 минут?» без события-таймера","Текстовая сноска под диаграммой"], correct:0,
+ expl:"«Что наступит раньше — ответ или время» — событийный шлюз с событием-сообщением и событием-таймером. Ветка таймера обязана вернуть холд: забытые деньги — вторая половина этой ловушки."},
+{type:"single", q:"Шаг 8 · BPMN. «Курьер может отказаться — предлагаем следующему». Какая конструкция?",
+ opts:["Цикл: предложить заказ → XOR «принял?» → при отказе вернуться к поиску курьера","AND-шлюз: предложить всем курьерам одновременно","Перечислить курьеров списком внутри задачи","Отдельная несвязанная диаграмма про курьеров"], correct:0,
+ expl:"«Может отказаться — тогда следующему» — цикл с XOR. Предложить всем сразу (AND) — другой процесс с другой бизнес-логикой: все приняли бы один заказ. Подумайте на защите: сколько итераций допустимо и что после — это допущение, его надо записать."},
+{type:"multi", q:"Шаг 9 · Use case. Кто акторы платформы?",
+ opts:["Клиент","Курьер","Ресторан","Платёжный шлюз","База заказов","Корзина"], correct:[0,1,2,3],
+ expl:"Акторы — внешние роли: три типа пользователей и внешняя платёжная система. База и корзина — внутренности системы, на use case диаграмме их нет."},
+{type:"single", q:"Шаг 10 · Sequence. «Пуши о смене статуса не должны тормозить процесс». Какими стрелками показать пуши?",
+ opts:["Асинхронными (открытый наконечник) — основной поток их не ждёт","Синхронными — до ответа клиенту","Пунктирными — это же ответы","Не показывать вовсе"], correct:0,
+ expl:"«Не должны тормозить» — асинхронность. Пунктирная стрелка — возврат из вызова, это другое. Если показать пуш синхронным, упавший сервис уведомлений остановит доставку еды — ровно то, чего боится продакт."}
+]}
+];
+
+const DIAGRAMS = { b9: DIAG_B9 };
+const TYPE_LABEL = {single:"Один ответ", multi:"Несколько ответов", match:"Соответствие", order:"Порядок"};
+const TOTAL = MODULES.reduce((s,m)=>s+m.tasks.length,0);
+
+/* ---------- state ---------- */
+const LS_KEY = "notation-trainer-v1";
+let store = {};
+try{ store = JSON.parse(localStorage.getItem(LS_KEY)||"{}") }catch(e){ store = {} }
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(store)) }catch(e){} }
+function tid(m,i){ return m.id+"-"+i }
+
+let current = MODULES[0].id;
+
+/* ---------- helpers ---------- */
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") }
+function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild }
+function modStats(m){
+  let done=0, ok=0;
+  m.tasks.forEach((t,i)=>{ const r=store[tid(m,i)]; if(r){done++; if(r.ok) ok++} });
+  return {done, ok, total:m.tasks.length};
+}
+function totals(){
+  let done=0, ok=0;
+  MODULES.forEach(m=>{ const s=modStats(m); done+=s.done; ok+=s.ok });
+  return {done, ok};
+}
+
+/* ---------- sidebar & header ---------- */
+function renderSide(){
+  const side=document.getElementById("side");
+  side.innerHTML="";
+  MODULES.forEach(m=>{
+    const s=modStats(m);
+    const b=el(`<button class="navb ${current===m.id?"act":""}" type="button">
+      <div class="nb-t">${m.nav}</div>
+      <div class="nb-s">${m.navSub} · верно ${s.ok}/${s.total}</div>
+      <div class="nb-bar"><i style="width:${s.total?Math.round(100*s.done/s.total):0}%"></i></div>
+    </button>`);
+    b.addEventListener("click",()=>{ current=m.id; renderAll(); window.scrollTo({top:0}); });
+    side.appendChild(b);
+  });
+  const t=totals();
+  const b=el(`<button class="navb ${current==="sum"?"act":""}" type="button">
+    <div class="nb-t">Итоги</div>
+    <div class="nb-s">Сводка и оценка</div>
+    <div class="nb-bar"><i style="width:${Math.round(100*t.done/TOTAL)}%"></i></div>
+  </button>`);
+  b.addEventListener("click",()=>{ current="sum"; renderAll(); window.scrollTo({top:0}); });
+  side.appendChild(b);
+
+  document.getElementById("totalfill").style.width=Math.round(100*t.done/TOTAL)+"%";
+  document.getElementById("totaldone").textContent=t.done;
+  document.getElementById("totalok").textContent=t.ok;
+}
+
+/* ---------- task rendering ---------- */
+function renderTask(m, i){
+  const t=m.tasks[i];
+  const id=tid(m,i);
+  const saved=store[id];
+  const card=el(`<section class="task ${saved?"locked":""}" id="card-${id}"></section>`);
+  const state = saved ? `<span class="task-state ${saved.ok?"ok":"err"}">${saved.ok?"✓ верно":"✗ неверно"}</span>` : "";
+  card.appendChild(el(`<div class="task-head">
+    <span class="task-num">${i+1} / ${m.tasks.length}</span>
+    <span class="task-type">${TYPE_LABEL[t.type]}</span>${state}
+  </div>`));
+  card.appendChild(el(`<div class="task-q">${t.q}</div>`));
+  const body=el(`<div class="task-body"></div>`);
+  card.appendChild(body);
+
+  if(t.legend) body.appendChild(el(`<p class="legend-note">${t.legend}</p>`));
+  if(t.code) body.appendChild(el(`<pre class="codeblock">${esc(t.code)}</pre>`));
+  if(t.diagram) body.appendChild(el(`<div>${DIAGRAMS[t.diagram]}</div>`));
+
+  const ctrl=el(`<div class="task-ctrl"><button class="checkbtn" type="button" disabled>Проверить</button></div>`);
+  const btn=ctrl.querySelector("button");
+
+  if(t.type==="single"||t.type==="multi"){
+    const inputType = t.type==="single"?"radio":"checkbox";
+    t.opts.forEach((o,oi)=>{
+      const opt=el(`<label class="opt"><input type="${inputType}" name="${id}" value="${oi}"><span>${o}</span></label>`);
+      opt.querySelector("input").addEventListener("change",()=>{ btn.disabled = body.querySelectorAll("input:checked").length===0 });
+      body.appendChild(opt);
+    });
+    btn.addEventListener("click",()=>{
+      const sel=[...body.querySelectorAll("input:checked")].map(x=>+x.value);
+      const correct = t.type==="single" ? [t.correct] : t.correct;
+      const ok = sel.length===correct.length && sel.every(v=>correct.includes(v));
+      store[id]={a:sel, ok}; save();
+      finishTask(card, body, m, i);
+      renderSide();
+    });
+  }
+  if(t.type==="match"){
+    t.items.forEach((it,ri)=>{
+      const row=el(`<div class="mrow"><div class="ml">${it.l}</div>
+        <select data-row="${ri}"><option value="">— выберите —</option>${t.choices.map((c,ci)=>`<option value="${ci}">${c}</option>`).join("")}</select></div>`);
+      row.querySelector("select").addEventListener("change",()=>{
+        btn.disabled=[...body.querySelectorAll("select")].some(s=>s.value==="");
+      });
+      body.appendChild(row);
+    });
+    btn.addEventListener("click",()=>{
+      const sel=[...body.querySelectorAll("select")].map(s=>+s.value);
+      const ok=sel.every((v,ri)=>v===t.items[ri].a);
+      store[id]={a:sel, ok}; save();
+      finishTask(card, body, m, i);
+      renderSide();
+    });
+  }
+  if(t.type==="order"){
+    const zone=el(`<div>
+      <div class="ord-zone"><div class="ord-label">Ваша последовательность (нажмите, чтобы убрать)</div><div class="ord-seq"></div></div>
+      <div class="ord-zone"><div class="ord-label">Элементы (нажмите, чтобы добавить)</div><div class="ord-pool"></div></div>
+    </div>`);
+    body.appendChild(zone);
+    const seqBox=zone.querySelector(".ord-seq"), poolBox=zone.querySelector(".ord-pool");
+    let seq=[];
+    function draw(){
+      seqBox.innerHTML=""; poolBox.innerHTML="";
+      seq.forEach((ii,pos)=>{
+        const c=el(`<button class="ordc" type="button"><span class="n">${pos+1}.</span>${t.items[ii]}</button>`);
+        c.addEventListener("click",()=>{ seq=seq.filter(x=>x!==ii); draw() });
+        seqBox.appendChild(c);
+      });
+      t.items.forEach((label,ii)=>{
+        if(seq.includes(ii)) return;
+        const c=el(`<button class="ordc" type="button">${label}</button>`);
+        c.addEventListener("click",()=>{ seq.push(ii); draw() });
+        poolBox.appendChild(c);
+      });
+      btn.disabled = seq.length!==t.items.length;
+    }
+    draw();
+    btn.addEventListener("click",()=>{
+      const ok = seq.every((v,pos)=>v===t.seq[pos]);
+      store[id]={a:seq.slice(), ok}; save();
+      finishTask(card, body, m, i);
+      renderSide();
+    });
+  }
+
+  card.appendChild(ctrl);
+  if(saved) showFeedback(card, body, m, i);
+  return card;
+}
+
+function finishTask(card, body, m, i){
+  card.classList.add("locked");
+  const saved=store[tid(m,i)];
+  const head=card.querySelector(".task-head");
+  const old=head.querySelector(".task-state"); if(old) old.remove();
+  head.appendChild(el(`<span class="task-state ${saved.ok?"ok":"err"}">${saved.ok?"✓ верно":"✗ неверно"}</span>`));
+  showFeedback(card, body, m, i);
+}
+
+function showFeedback(card, body, m, i){
+  const t=m.tasks[i], saved=store[tid(m,i)];
+  if(!saved) return;
+  const btn=card.querySelector(".checkbtn"); if(btn) btn.style.display="none";
+
+  if(t.type==="single"||t.type==="multi"){
+    const correct = t.type==="single" ? [t.correct] : t.correct;
+    const sel = saved.a||[];
+    [...body.querySelectorAll(".opt")].forEach((opt,oi)=>{
+      const input=opt.querySelector("input");
+      input.disabled=true; input.checked=sel.includes(oi);
+      if(correct.includes(oi)){ opt.classList.add("is-ok"); opt.appendChild(el(`<span class="mark">✓</span>`)) }
+      else if(sel.includes(oi)){ opt.classList.add("is-err"); opt.appendChild(el(`<span class="mark">✗</span>`)) }
+    });
+  }
+  if(t.type==="match"){
+    [...body.querySelectorAll(".mrow")].forEach((row,ri)=>{
+      const s=row.querySelector("select");
+      s.value=String(saved.a[ri]); s.disabled=true;
+      const good = saved.a[ri]===t.items[ri].a;
+      row.classList.add(good?"is-ok":"is-err");
+      if(!good) row.appendChild(el(`<div class="fix">Правильно: ${t.choices[t.items[ri].a]}</div>`));
+    });
+  }
+  if(t.type==="order"){
+    const seqBox=body.querySelector(".ord-seq"), poolBox=body.querySelector(".ord-pool");
+    if(seqBox){
+      seqBox.innerHTML="";
+      (saved.a||[]).forEach((ii,pos)=>{
+        const good = t.seq[pos]===ii;
+        seqBox.appendChild(el(`<span class="ordc ${good?"is-ok":"is-err"}"><span class="n">${pos+1}.</span>${t.items[ii]}</span>`));
+      });
+      poolBox.closest(".ord-zone").style.display="none";
+      if(!saved.ok){
+        body.appendChild(el(`<p class="ord-correct"><b>Правильный порядок:</b> ${t.seq.map(ii=>t.items[ii]).join(" → ")}</p>`));
+      }
+    }
+  }
+  body.appendChild(el(`<div class="fb ${saved.ok?"ok":"err"}">
+    <b class="v">${saved.ok?"Верно.":"Неверно."}</b>${t.expl}
+  </div>`));
+}
+
+/* ---------- views ---------- */
+function renderModule(m){
+  const main=document.getElementById("main");
+  main.innerHTML="";
+  const s=modStats(m);
+  const head=el(`<div class="mod-head">
+    <p class="mod-eyebrow">${m.eyebrow}</p>
+    <h2 class="mod-title">${m.title}</h2>
+    <p class="mod-sub">${m.sub}</p>
+    <div class="mod-meta">
+      <span class="chip">Пройдено ${s.done}/${s.total}</span>
+      <span class="chip ok">Верно ${s.ok}</span>
+      <button class="linkbtn" type="button">Сбросить модуль</button>
+    </div>
+  </div>`);
+  head.querySelector(".linkbtn").addEventListener("click",(ev)=>{
+    const b=ev.currentTarget;
+    if(!b.dataset.armed){
+      b.dataset.armed="1"; b.textContent="Точно сбросить? Нажмите ещё раз";
+      setTimeout(()=>{ if(b.dataset.armed){ delete b.dataset.armed; b.textContent="Сбросить модуль"; } },4000);
+      return;
+    }
+    m.tasks.forEach((t,i)=>delete store[tid(m,i)]); save(); renderAll();
+  });
+  main.appendChild(head);
+  main.appendChild(el(`<details class="theory"><summary>Шпаргалка перед заданиями</summary><div class="theory-in">${m.theory}</div></details>`));
+  m.tasks.forEach((t,i)=>main.appendChild(renderTask(m,i)));
+  const st=modStats(m);
+  if(st.done===st.total){
+    main.appendChild(el(`<div class="verdict"><h3>Модуль пройден: ${st.ok} из ${st.total}</h3>
+    <p>${st.ok===st.total?"Идеально. Переходите к следующему модулю.":"Просмотрите разборы неверных ответов выше — именно такие ловушки встречаются в кейсах практикума."}</p></div>`));
+  }
+}
+
+function renderSummary(){
+  const main=document.getElementById("main");
+  main.innerHTML="";
+  main.appendChild(el(`<div class="mod-head">
+    <p class="mod-eyebrow">Сводка</p>
+    <h2 class="mod-title">Итоги тренировки</h2>
+    <p class="mod-sub">Результат считается по первой попытке в каждом задании — как на защите кейса.</p>
+  </div>`));
+  const grid=el(`<div class="sum-grid"></div>`);
+  MODULES.forEach(m=>{
+    const s=modStats(m);
+    const pct=s.done?Math.round(100*s.ok/s.total):0;
+    grid.appendChild(el(`<div class="sum-card">
+      <h3>${m.nav}</h3><div class="sc-s">${m.navSub.split("·")[0].trim()}</div>
+      <div class="sc-n">${s.ok}<small> / ${s.total} верно</small></div>
+      <div class="sum-bar"><i style="width:${pct}%"></i></div>
+    </div>`));
+  });
+  main.appendChild(grid);
+
+  const t=totals();
+  if(t.done===TOTAL){
+    const pct=Math.round(100*t.ok/TOTAL);
+    let verdict, advice;
+    if(pct>=90){ verdict="Отлично — "+pct+"%"; advice="Нотации у вас в руках. Открывайте кейсы практикума и стройте диаграммы: тренажёр покрывает теорию, кейсы проверят умение читать легенду."; }
+    else if(pct>=75){ verdict="Хорошо — "+pct+"%"; advice="База уверенная. Перечитайте разборы неверных ответов — чаще всего западают шлюзы BPMN и кардинальности — и переходите к кейсам."; }
+    else if(pct>=60){ verdict="Зачёт — "+pct+"%"; advice="Основа есть, но ловушки ещё срабатывают. Сбросьте слабый модуль, перечитайте шпаргалку и пройдите его ещё раз до 90%+."; }
+    else { verdict="Пока рано на защиту — "+pct+"%"; advice="Вернитесь к шпаргалкам модулей и лекции, затем сбросьте прогресс и пройдите тренажёр заново. Цель — стабильные 75%+."; }
+    main.appendChild(el(`<div class="verdict"><h3>${verdict}</h3><p>${advice}</p></div>`));
+  } else {
+    main.appendChild(el(`<div class="verdict"><h3>Пройдено ${t.done} из ${TOTAL}</h3>
+      <p>Итоговая оценка появится, когда будут закрыты все задания во всех четырёх модулях.</p></div>`));
+  }
+  const reset=el(`<button class="danger" type="button">Сбросить весь прогресс</button>`);
+  reset.addEventListener("click",(ev)=>{
+    const b=ev.currentTarget;
+    if(!b.dataset.armed){
+      b.dataset.armed="1"; b.textContent="Точно удалить все ответы? Нажмите ещё раз";
+      setTimeout(()=>{ if(b.dataset.armed){ delete b.dataset.armed; b.textContent="Сбросить весь прогресс"; } },4000);
+      return;
+    }
+    store={}; save(); current=MODULES[0].id; renderAll(); window.scrollTo({top:0});
+  });
+  main.appendChild(reset);
+}
+
+function renderAll(){
+  renderSide();
+  const m=MODULES.find(x=>x.id===current);
+  if(m) renderModule(m); else renderSummary();
+}
+renderAll();
+</script>
+</body>
+</html>
