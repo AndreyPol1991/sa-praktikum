@@ -3,108 +3,1390 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Практикум системного аналитика — материалы для учеников</title>
+<title>Кейс-квест: спроектируем сервис фитнес-клуба</title>
 <style>
 :root{
-  --bg:#F6F7F9; --surface:#FFFFFF; --surface2:#F1F3F7;
-  --ink:#1B2230; --muted:#5B6577; --line:#E2E6ED;
-  --accent:#2C4FC7; --accent-ink:#FFFFFF; --accent-soft:#EDF1FD;
-  --green:#147A5E; --green-soft:#E6F2ED;
-  --shadow:0 1px 3px rgba(27,34,48,.07);
+  --bg:#F4F7F5; --surface:#FFFFFF; --surface2:#ECF1EE;
+  --ink:#1A2420; --muted:#5C6B63; --line:#DFE6E1;
+  --accent:#147A5E; --accent-ink:#FFFFFF; --accent-soft:#E6F2ED;
+  --amber:#B98A2F; --amber-soft:#F7EFDD;
+  --ok:#177A46; --ok-soft:#E8F5EE; --err:#BE3A2F; --err-soft:#FBEDEB;
+  --code-bg:#EFF3F0; --shadow:0 1px 3px rgba(26,36,32,.08);
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#131722; --surface:#1B2130; --surface2:#20273A;
-    --ink:#E9EDF5; --muted:#9AA4B8; --line:#2A3244;
-    --accent:#8AA2F5; --accent-ink:#10162B; --accent-soft:#232C48;
-    --green:#4CC9A4; --green-soft:#1E332B;
-    --shadow:0 1px 3px rgba(0,0,0,.35);
+    --bg:#111815; --surface:#1A211D; --surface2:#212B25;
+    --ink:#E9F0EC; --muted:#93A69B; --line:#2B3830;
+    --accent:#4CC9A4; --accent-ink:#0D2019; --accent-soft:#1E332B;
+    --amber:#D9A94A; --amber-soft:#332A18;
+    --ok:#4CC38A; --ok-soft:#18301F; --err:#E5695E; --err-soft:#3A211E;
+    --code-bg:#151C18; --shadow:0 1px 3px rgba(0,0,0,.4);
   }
 }
-*{box-sizing:border-box; margin:0; padding:0}
-body{background:var(--bg); color:var(--ink); font:16px/1.6 "Segoe UI",-apple-system,system-ui,Roboto,sans-serif}
-.wrap{max-width:820px; margin:0 auto; padding:44px 24px 80px}
-.eyebrow{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:6px}
-h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:34px; line-height:1.2; margin-bottom:10px; text-wrap:balance}
-.lead{color:var(--muted); font-size:16px; max-width:62ch; margin-bottom:34px}
-h2{font-family:Georgia,serif; font-weight:400; font-size:22px; margin:36px 0 14px}
-.cards{display:grid; gap:14px}
-a.card{
-  display:block; text-decoration:none; color:inherit; border:1px solid var(--line);
-  border-left:4px solid var(--accent); border-radius:12px; background:var(--surface);
-  padding:18px 20px; box-shadow:var(--shadow);
+:root[data-theme="light"]{
+  --bg:#F4F7F5; --surface:#FFFFFF; --surface2:#ECF1EE;
+  --ink:#1A2420; --muted:#5C6B63; --line:#DFE6E1;
+  --accent:#147A5E; --accent-ink:#FFFFFF; --accent-soft:#E6F2ED;
+  --amber:#B98A2F; --amber-soft:#F7EFDD;
+  --ok:#177A46; --ok-soft:#E8F5EE; --err:#BE3A2F; --err-soft:#FBEDEB;
+  --code-bg:#EFF3F0; --shadow:0 1px 3px rgba(26,36,32,.08);
 }
-a.card:hover{border-color:var(--accent); transform:translateY(-1px)}
-a.card:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
-a.card.green{border-left-color:var(--green)}
-a.card h3{font-size:18px; margin-bottom:4px}
-a.card p{color:var(--muted); font-size:14px; max-width:60ch}
-a.card .go{display:inline-block; margin-top:10px; font-size:13px; font-weight:600; color:var(--accent)}
-a.card.green .go{color:var(--green)}
-.badge{display:inline-block; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
-  background:var(--accent-soft); color:var(--accent); border-radius:20px; padding:3px 10px; margin-bottom:8px}
-.badge.green{background:var(--green-soft); color:var(--green)}
-ul.files{list-style:none; display:grid; gap:8px}
-ul.files li{border:1px solid var(--line); border-radius:9px; background:var(--surface); padding:10px 14px}
-ul.files a{color:var(--ink); text-decoration:none; font-size:14.5px}
-ul.files a:hover{color:var(--accent); text-decoration:underline}
-ul.files span{color:var(--muted); font-size:13px}
-.note{border:1px solid var(--line); border-radius:10px; background:var(--surface2); padding:14px 18px; font-size:14px; color:var(--muted); margin-top:30px}
-table{border-collapse:collapse; width:100%; font-size:14px; margin-top:8px}
-th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:6px 8px; border-bottom:1px solid var(--line)}
-td{padding:7px 8px; border-bottom:1px solid var(--line)}
-td a{color:var(--accent)}
-@media (prefers-reduced-motion: reduce){*{transition:none!important; transform:none!important}}
+:root[data-theme="dark"]{
+  --bg:#111815; --surface:#1A211D; --surface2:#212B25;
+  --ink:#E9F0EC; --muted:#93A69B; --line:#2B3830;
+  --accent:#4CC9A4; --accent-ink:#0D2019; --accent-soft:#1E332B;
+  --amber:#D9A94A; --amber-soft:#332A18;
+  --ok:#4CC38A; --ok-soft:#18301F; --err:#E5695E; --err-soft:#3A211E;
+  --code-bg:#151C18; --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 "Segoe UI",-apple-system,system-ui,Roboto,sans-serif}
+button{font:inherit; color:inherit}
+
+.top{border-bottom:1px solid var(--line); background:var(--surface); padding:20px 24px 0}
+.top-in{max-width:900px; margin:0 auto}
+.eyebrow{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin:0 0 4px}
+h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:27px; margin:0 0 4px; text-wrap:balance}
+.top-sub{color:var(--muted); font-size:13.5px; margin:0 0 16px; max-width:72ch}
+
+.stepper{display:flex; gap:4px; overflow-x:auto}
+.step{flex:1 1 0; min-width:104px; border:none; background:none; cursor:pointer; text-align:left; padding:8px 10px 12px; border-bottom:3px solid var(--line); color:var(--muted)}
+.step:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.step .st-n{font-family:Georgia,serif; font-size:12px; display:block}
+.step .st-t{font-size:13px; font-weight:600; display:block; color:var(--ink)}
+.step .st-s{font-size:11px; display:block; margin-top:1px}
+.step.locked{cursor:default; opacity:.45}
+.step.locked .st-t{color:var(--muted)}
+.step.act{border-bottom-color:var(--accent)}
+.step.done .st-s{color:var(--ok)}
+
+.wrap{max-width:900px; margin:0 auto; padding:24px 24px 90px}
+.stage-title{font-family:Georgia,serif; font-weight:400; font-size:24px; margin:6px 0 6px; text-wrap:balance}
+.stage-sub{color:var(--muted); font-size:14px; margin:0 0 18px; max-width:70ch}
+
+.card{border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); padding:18px; margin:0 0 16px}
+.letter{border-left:4px solid var(--accent); font-size:14.5px}
+.letter p{margin:8px 0; max-width:66ch}
+.letter .sig{color:var(--muted); font-style:italic}
+
+.sched{overflow-x:auto}
+.sched table{border-collapse:collapse; width:100%; min-width:560px; font-size:12px}
+.sched th{font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; padding:6px 8px; text-align:left; border-bottom:1px solid var(--line)}
+.sched td{padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+.cls{display:inline-block; border-radius:6px; padding:2px 8px; margin:2px 2px; font-size:11.5px; background:var(--accent-soft); border:1px solid var(--accent); white-space:nowrap}
+.cls.full{background:var(--amber-soft); border-color:var(--amber)}
+.sched-cap{font-size:11.5px; color:var(--muted); margin-top:10px}
+.sched-cap i{display:inline-block; width:10px; height:10px; border-radius:3px; margin:0 3px -1px 10px}
+
+.bigbtn{background:var(--accent); color:var(--accent-ink); border:none; border-radius:10px; padding:11px 24px; font-weight:600; font-size:15px; cursor:pointer}
+.bigbtn:hover:not(:disabled){filter:brightness(1.08)}
+.bigbtn:disabled{opacity:.45; cursor:default}
+.bigbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.iv-grid{display:grid; grid-template-columns:1fr 290px; gap:16px; align-items:start}
+@media (max-width:760px){.iv-grid{grid-template-columns:1fr}}
+.roletag{font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; padding:2px 8px; border-radius:4px; background:var(--accent-soft); color:var(--accent); flex:none}
+.person{display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line)}
+.person:last-child{border-bottom:none}
+.person .pd{font-size:13.5px; color:var(--muted)}
+.person .pd b{color:var(--ink)}
+
+.qadd{display:flex; gap:8px; margin:10px 0 4px}
+.qadd input{flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font:14px "Segoe UI",sans-serif}
+.qadd input:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.qadd button{background:var(--accent); color:var(--accent-ink); border:none; border-radius:9px; padding:8px 16px; font-weight:600; cursor:pointer}
+.myq{display:flex; gap:8px; align-items:baseline; padding:7px 10px; border:1px solid var(--line); border-radius:9px; margin-bottom:6px; font-size:14px}
+.myq .n{font-family:Georgia,serif; color:var(--accent); flex:none}
+.myq .del{margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:0 4px}
+.myq .del:hover{color:var(--err)}
+.myq-ro{cursor:default}
+
+.topic{border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); margin-bottom:12px; padding:14px 16px}
+.topic .t-head{display:flex; gap:10px; align-items:center; margin-bottom:8px}
+.topic .t-req{font-size:13px; font-weight:600; background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:7px 10px; margin:8px 0}
+.topic .t-quote{font-size:13.5px; max-width:66ch}
+.topic .t-ex{font-size:12.5px; color:var(--muted); font-style:italic; margin-top:6px}
+.markrow{display:flex; gap:8px; margin-top:10px}
+.markbtn{border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer}
+.markbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.markbtn.on-ok{border-color:var(--ok); background:var(--ok-soft); color:var(--ok); font-weight:600}
+.markbtn.on-miss{border-color:var(--amber); background:var(--amber-soft); color:var(--amber); font-weight:600}
+
+.notebook{position:sticky; top:12px}
+.notebook h3{margin:0 0 2px; font-family:Georgia,serif; font-weight:400; font-size:17px}
+.notebook .nb-s{font-size:12px; color:var(--muted); margin-bottom:10px}
+.req{font-size:12.5px; padding:7px 10px; border:1px solid var(--ok); background:var(--ok-soft); border-radius:8px; margin-bottom:6px}
+.req.miss{border-color:var(--amber); background:var(--amber-soft)}
+.req-empty{font-size:12.5px; color:var(--muted); font-style:italic}
+
+.weakcard{border-left:4px solid var(--muted)}
+.weakcard h3{margin:0 0 8px; font-family:Georgia,serif; font-weight:400; font-size:17px}
+.weakcard li{font-size:13.5px; margin:6px 0; max-width:68ch}
+.weakcard b{font-style:normal}
+
+.handout{border-left:4px solid var(--amber)}
+.handout h3{margin:0 0 8px; font-family:Georgia,serif; font-weight:400; font-size:18px}
+.handout table{border-collapse:collapse; width:100%; font-size:13px}
+.handout th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:6px 8px; border-bottom:1px solid var(--line)}
+.handout td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+.handout .mk{font-weight:600; color:var(--accent); white-space:nowrap}
+.hscroll{overflow-x:auto}
+
+.task{border:1px solid var(--line); border-radius:12px; background:var(--surface); margin:0 0 16px; box-shadow:var(--shadow); overflow:hidden}
+.task-head{display:flex; align-items:center; gap:10px; padding:11px 16px 0}
+.task-num{font-family:Georgia,serif; font-size:14px; color:var(--muted)}
+.task-type{font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); background:var(--surface2); border-radius:4px; padding:2px 7px}
+.task-state{margin-left:auto; font-size:12px; font-weight:600}
+.task-state.ok{color:var(--ok)} .task-state.err{color:var(--err)}
+.task-q{padding:8px 16px 0; font-size:15px; font-weight:600; max-width:66ch}
+.task-body{padding:12px 16px 16px}
+.legend-note{font-size:13px; color:var(--muted); font-style:italic; margin:0 0 10px; max-width:64ch}
+pre.codeblock{background:var(--code-bg); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font:12.5px/1.5 Consolas,"Cascadia Mono",monospace; overflow-x:auto; margin:0 0 12px; white-space:pre}
+.opt{display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border:1px solid var(--line); border-radius:9px; margin-bottom:7px; cursor:pointer; background:var(--surface)}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin-top:3px; accent-color:var(--accent); flex:none}
+.opt span{font-size:14px}
+.task.locked .opt{cursor:default; pointer-events:none}
+.opt.is-ok{border-color:var(--ok); background:var(--ok-soft)}
+.opt.is-err{border-color:var(--err); background:var(--err-soft)}
+.opt .mark{margin-left:auto; font-weight:700; flex:none; align-self:center}
+.opt.is-ok .mark{color:var(--ok)} .opt.is-err .mark{color:var(--err)}
+.mrow{display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap}
+.mrow .ml{flex:1 1 240px; font-size:14px; border:1px solid var(--line); border-radius:9px; padding:8px 12px; background:var(--surface)}
+.mrow select{flex:0 1 230px; padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font:14px "Segoe UI",sans-serif; cursor:pointer}
+.mrow.is-ok .ml{border-color:var(--ok); background:var(--ok-soft)}
+.mrow.is-err .ml{border-color:var(--err); background:var(--err-soft)}
+.mrow .fix{font-size:12.5px; color:var(--ok); flex-basis:100%}
+.ord-zone{margin-bottom:10px}
+.ord-label{font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin:0 0 6px}
+.ord-pool,.ord-seq{display:flex; flex-wrap:wrap; gap:7px; min-height:40px; padding:8px; border:1px dashed var(--line); border-radius:10px}
+.ord-seq{border-style:solid; background:var(--surface2)}
+.ordc{border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:6px 11px; font-size:13.5px; cursor:pointer; text-align:left}
+.ordc:hover{border-color:var(--accent)}
+.ordc .n{font-family:Georgia,serif; color:var(--accent); margin-right:6px}
+.task.locked .ordc{pointer-events:none}
+.ordc.is-ok{border-color:var(--ok); background:var(--ok-soft)}
+.ordc.is-err{border-color:var(--err); background:var(--err-soft)}
+.ord-correct{font-size:13px; margin-top:8px; color:var(--muted)}
+.task-ctrl{display:flex; gap:10px; margin-top:4px; padding:0 16px 16px}
+.checkbtn{background:var(--accent); color:var(--accent-ink); border:none; border-radius:9px; padding:8px 18px; font-weight:600; font-size:14px; cursor:pointer}
+.checkbtn:disabled{opacity:.45; cursor:default}
+.checkbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.fb{margin:12px 16px 16px; border-radius:9px; padding:11px 14px; font-size:13.5px; border:1px solid transparent; max-width:70ch}
+.fb.ok{background:var(--ok-soft); border-color:var(--ok)}
+.fb.err{background:var(--err-soft); border-color:var(--err)}
+.fb b.v{display:block; margin-bottom:4px}
+.fb.ok b.v{color:var(--ok)} .fb.err b.v{color:var(--err)}
+
+.journey{display:flex; gap:6px; flex-wrap:wrap; margin:10px 0 4px}
+.jstep{border:1px solid var(--line); border-radius:9px; background:var(--surface2); padding:7px 11px; font-size:12.5px; display:flex; align-items:center; gap:6px}
+.jstep .je{font-size:16px}
+.jarr{align-self:center; color:var(--muted)}
+
+.pathmap{display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 16px}
+.pm{border:1px solid var(--line); border-radius:9px; background:var(--surface); padding:8px 12px; font-size:12.5px; flex:1 1 120px; min-width:120px}
+.pm b{display:block; font-size:12px}
+.pm span{color:var(--muted); font-size:11.5px}
+.pm.here{border-color:var(--accent); background:var(--accent-soft)}
+
+.verdict{border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:10px; background:var(--surface); padding:16px 18px; margin:0 0 18px; max-width:74ch}
+.verdict h3{margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:20px}
+.verdict p{margin:0; color:var(--muted); font-size:14px}
+.sum-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin:0 0 18px}
+.sum-card{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:14px}
+.sum-card h3{margin:0 0 6px; font-size:14px}
+.sum-card .sc-n{font-family:Georgia,serif; font-size:26px}
+.sum-card .sc-n small{font-size:13px; color:var(--muted); font-family:"Segoe UI",sans-serif}
+.deliver{margin:0; padding-left:20px; max-width:70ch}
+.deliver li{margin:5px 0}
+.danger{background:none; border:1px solid var(--err); color:var(--err); border-radius:9px; padding:8px 16px; font-size:13.5px; cursor:pointer}
+.danger:hover{background:var(--err-soft)}
+.hint{font-size:12.5px; color:var(--muted); margin:10px 0 0}
+
+/* ---- эталонный разбор на финальном этапе ---- */
+.ref h3{font-family:Georgia,serif; font-weight:400; font-size:19px; margin:22px 0 6px}
+.ref h4{font-size:13.5px; font-weight:600; margin:14px 0 5px}
+.ref p{margin:8px 0; max-width:70ch; font-size:14px}
+.ref ul,.ref ol{margin:8px 0 8px 20px; max-width:70ch; font-size:14px}
+.ref li{margin:4px 0}
+.ref code{background:var(--code-bg); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font:12.5px Consolas,"Cascadia Mono",monospace}
+.ref pre{background:var(--code-bg); border:1px solid var(--line); border-radius:9px; padding:13px 15px; font:12px/1.5 Consolas,"Cascadia Mono",monospace; overflow-x:auto; margin:11px 0; white-space:pre}
+.ref table{border-collapse:collapse; width:100%; font-size:13.5px; margin:10px 0}
+.ref th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--line)}
+.ref td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+.tblwrap{overflow-x:auto}
+.diagwrap{border:1px solid var(--line); border-radius:11px; background:var(--surface2); padding:14px; margin:12px 0; overflow-x:auto}
+.diagwrap .cap{font-size:12px; color:var(--muted); margin-top:9px; max-width:70ch}
+svg.diag{display:block; min-width:620px; max-width:100%; height:auto}
+svg.diag .ent{fill:var(--surface); stroke:var(--muted); stroke-width:1.2; rx:8}
+svg.diag .ent-key{fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.4}
+svg.diag .t{fill:var(--ink); font:600 13px "Segoe UI",sans-serif}
+svg.diag .s{fill:var(--muted); font:11px "Segoe UI",sans-serif}
+svg.diag .rel{stroke:var(--muted); stroke-width:1.4; fill:none}
+svg.diag .rl{fill:var(--muted); font:10.5px "Segoe UI",sans-serif}
+svg.diag marker path{stroke:var(--muted); stroke-width:1.3; fill:none}
+svg.diag marker circle{stroke:var(--muted); stroke-width:1.3; fill:none}
+.bpx{display:flex; align-items:center; gap:7px; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--surface2); margin:11px 0; overflow-x:auto}
+.bp-node{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none}
+.bp-cap{font-size:10.5px; color:var(--muted); max-width:104px; text-align:center; line-height:1.25}
+.bp-start{width:26px; height:26px; border:2px solid var(--ink); border-radius:50%; background:var(--surface)}
+.bp-timer{width:26px; height:26px; border:2px solid var(--ink); border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:13px}
+.bp-end{width:26px; height:26px; border:5px solid var(--ink); border-radius:50%; background:var(--surface)}
+.bp-task{border:1.5px solid var(--ink); border-radius:8px; padding:7px 10px; font-size:11.5px; max-width:132px; text-align:center; background:var(--surface); line-height:1.3}
+.bp-gwrap{display:flex; flex-direction:column; align-items:center; gap:5px; flex:none}
+.bp-gw{width:26px; height:26px; border:1.5px solid var(--ink); transform:rotate(45deg); display:flex; align-items:center; justify-content:center; margin:6px; background:var(--surface)}
+.bp-gw span{transform:rotate(-45deg); font-weight:700; font-size:15px}
+.bp-arr{width:26px; height:2px; background:var(--muted); position:relative; flex:none}
+.bp-arr::after{content:''; position:absolute; right:-1px; top:-4px; border-left:7px solid var(--muted); border-top:5px solid transparent; border-bottom:5px solid transparent}
+.bp-arr.lbl::before{content:attr(data-l); position:absolute; top:-15px; left:-6px; font-size:10px; color:var(--muted); white-space:nowrap}
+.bp-col{display:flex; flex-direction:column; gap:14px}
+.bp-row{display:flex; align-items:center; gap:7px}
+.legend{display:flex; gap:15px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin:6px 0 2px}
+.legend b{color:var(--ink)}
+.bad{border-left:3px solid var(--err); background:var(--err-soft); border-radius:0 8px 8px 0; padding:10px 13px; margin:10px 0; font-size:13.5px}
+.good{border-left:3px solid var(--ok); background:var(--ok-soft); border-radius:0 8px 8px 0; padding:10px 13px; margin:10px 0; font-size:13.5px}
+.bad b,.good b{display:block; margin-bottom:3px}
+.who{font-size:12.5px; color:var(--muted); font-style:italic; margin-bottom:9px}
+.ba{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:11px 0}
+@media (max-width:720px){.ba{grid-template-columns:1fr}}
+.ba .b{border:1px solid var(--line); border-radius:9px; padding:9px 11px; background:var(--surface)}
+.ba .b h5{font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:5px}
+.ba table{margin:0; font-size:12.5px}
+.ba td,.ba th{padding:5px 6px}
+tr.chg td{background:var(--amber-soft)}
+tr.new td{background:var(--ok-soft)}
+tr.del td{background:var(--err-soft); text-decoration:line-through; color:var(--muted)}
+
+.hintbox{margin:0 0 10px; border:1px dashed var(--amber); border-radius:9px; background:var(--amber-soft)}
+.hintbox summary{cursor:pointer; padding:8px 12px; font-size:12.5px; font-weight:600; color:var(--amber); list-style:none}
+.hintbox summary::before{content:"💡 "}
+.hintbox summary:focus-visible{outline:2px solid var(--amber); outline-offset:-2px; border-radius:9px}
+.hintbox p{margin:0; padding:0 12px 10px; font-size:13px; max-width:64ch}
+.spoil{border:1px solid var(--line); border-radius:9px; background:var(--surface); margin-bottom:7px}
+.spoil summary{cursor:pointer; padding:8px 12px; font-size:13px; font-weight:600; color:var(--muted); list-style:none}
+.spoil summary::before{content:"👁 "; opacity:.7}
+.spoil summary:hover{color:var(--accent)}
+.spoil summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:9px}
+.spoil .sp-in{padding:0 12px 10px; font-size:13.5px; max-width:66ch}
+.spoil .sp-why{font-size:12.5px; color:var(--muted); font-style:italic; margin-top:4px}
+.topbar{display:flex; align-items:flex-start; gap:12px}
+.topbar .grow{flex:1}
+.resetmini{background:none; border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:6px 12px; font-size:12.5px; cursor:pointer; flex:none; margin-top:4px}
+.resetmini:hover{border-color:var(--err); color:var(--err)}
+.resetmini:focus-visible{outline:2px solid var(--err); outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
 </style>
-</head>
-<body>
-<div class="wrap">
-  <p class="eyebrow">Материалы для участников</p>
-  <h1>Практикум системного аналитика: ERD, BPMN, UML, DFD</h1>
-  <p class="lead">Всё, что нужно для занятия: интерактивный тренажёр нотаций, кейс-квест «от заказчика до реализации» и текстовые кейсы для самостоятельной работы. Прогресс в интерактивных материалах сохраняется в вашем браузере.</p>
 
-  <h2>Интерактивные материалы</h2>
-  <div class="cards">
-    <a class="card green" href="case-fitness.html">
-      <span class="badge green">Кейс-квест · 6 этапов</span>
-      <h3>Спроектируем сервис фитнес-клуба</h3>
-      <p>Полный путь аналитика: письмо заказчика → вы сами формулируете вопросы для интервью → выводите требования → собираете путь клиента (BPMN) → проектируете модель данных (ERD) → передаёте проект разработке. На каждом этапе есть примеры и наводящие подсказки.</p>
-      <span class="go">Начать кейс →</span>
-    </a>
-    <a class="card" href="trainer.html">
-      <span class="badge">Тренажёр · 84 задания</span>
-      <h3>Тренажёр нотаций: ERD · BPMN · UML · DFD</h3>
-      <p>Теория и практика по четырём нотациям: шпаргалки, поиск ошибок в диаграммах и коде, задания «какая диаграмма нужна», мини-кейсы и сквозной кейс. Мгновенная проверка с разбором каждого ответа.</p>
-      <span class="go">Открыть тренажёр →</span>
-    </a>
-    <a class="card green" href="erd-explained.html">
-      <span class="badge green">Разбор · готовые диаграммы</span>
-      <h3>ERD и BPMN фитнес-клуба: что куда, как и почему</h3>
-      <p>Эталонное решение кейса с объяснением каждого шага: схемы связей, полный код модели, три процесса BPMN — и семь ситуаций из жизни клуба (увольнение тренера, рост цен, отмена занятия) с наглядным ответом, что меняется в базе данных.</p>
-      <span class="go">Открыть разбор →</span>
-    </a>
+<header class="top">
+  <div class="top-in">
+    <div class="topbar">
+      <div class="grow">
+        <p class="eyebrow">Интерактивный кейс-квест · от заказчика до реализации</p>
+        <h1>«Спроектируем сервис фитнес-клуба»</h1>
+        <p class="top-sub">Вы — системный аналитик. Заказчик уже в переговорке. Пройдите весь путь проекта: сформулируйте свои вопросы, проведите интервью и сами выведите требования, соберите путь клиента, спроектируйте модель данных — и передайте проект в разработку. Этапы открываются по очереди, прогресс сохраняется в браузере.</p>
+      </div>
+      <button class="resetmini" id="resetall" type="button">⟲ Начать с нуля</button>
+    </div>
+    <nav class="stepper" id="stepper" aria-label="Этапы кейса"></nav>
   </div>
+</header>
 
-  <h2>Кейсы для самостоятельной работы</h2>
-  <table>
-    <tr><th>Кейс</th><th>Нотация</th></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/00_Инструкция.md">00. Инструкция участника</a></td><td>правила, формат сдачи</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/01_ERD_Онлайн-школа.md">01. Онлайн-школа</a></td><td>ERD</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/02_ERD_Каршеринг.md">02. Каршеринг</a></td><td>ERD</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/03_BPMN_Возврат_товара.md">03. Возврат товара</a></td><td>BPMN</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/04_BPMN_Пропуск_в_бизнес-центр.md">04. Пропуск в бизнес-центр</a></td><td>BPMN, пулы</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/05_UML_UseCase_Фитнес-клуб.md">05. Фитнес-клуб</a></td><td>UML Use Case</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/06_UML_Activity_Публикация_статьи.md">06. Публикация статьи</a></td><td>UML Activity</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/07_UML_Sequence_Оплата_заказа.md">07. Оплата заказа</a></td><td>UML Sequence</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/08_DFD_Личный_кабинет_ЖКХ.md">08. Личный кабинет ЖКХ</a></td><td>DFD</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/09_Комплексный_кейс_Доставка_еды.md">09. Доставка еды (командный)</a></td><td>все нотации</td></tr>
-    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/99_Чеклист_самопроверки.md">99. Чек-лист самопроверки</a></td><td>перед сдачей</td></tr>
-  </table>
+<main class="wrap" id="main"></main>
 
-  <div class="note">
-    <b>Инструменты:</b> ERD — <a href="https://dbdiagram.io">dbdiagram.io</a>, BPMN — <a href="https://bpmn.io">bpmn.io</a>, UML — <a href="https://plantuml.com">PlantUML</a> или <a href="https://draw.io">draw.io</a>.
-    Каждый кейс сдаётся как картинка диаграммы <b>плюс исходный код</b> и ответы на вопросы: проверяется корректность, а не красота.
-  </div>
-</div>
+<script>
+"use strict";
+
+/* ================= state ================= */
+const LS="fitness-case-v3";
+let S={started:false, myq:[], ivDone:false, ivMark:{}, ivDer:{}, ans:{}};
+try{ S=Object.assign(S, JSON.parse(localStorage.getItem(LS)||"{}")) }catch(e){}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)) }catch(e){} }
+let cur=0;
+const MIN_Q=8;
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function el(h){const t=document.createElement("template");t.innerHTML=h.trim();return t.content.firstChild}
+
+/* ============ interview topics (revealed only after the student commits questions).
+   der = варианты «что из этого следует», derC = индекс правильного ============ */
+const TOPICS=[
+{role:"Владелец", a:"Действующий абонемент у человека один. Но за годы их накапливается много: закончился — купил новый. Хотим видеть всю историю карт клиента — от неё зависят скидки постоянным.",
+ der:["У клиента может быть много абонементов во времени; «активный один» — правило, а не связь 1:1","Связь клиент—абонемент строго 1:1, старые карты удаляем","Историю карт хранить не нужно — важна только текущая"], derC:0,
+ req:"Клиент → абонементы: 1:N; активный один (правило), история хранится",
+ ex:"«Сколько абонементов может быть у одного человека?» — вопрос о кардинальности"},
+{role:"Администратор", a:"Абонементы бывают трёх видов: безлимит, «утренний» до 16:00 и пакет на 12 посещений. Цены и условия мы меняем, но купленная карта живёт по условиям на момент покупки.",
+ der:["При смене цены нужно обновить все проданные карты","Тип абонемента — справочник; купленная карта хранит снапшот цены и условий","Цену достаточно хранить только в справочнике типов"], derC:1,
+ req:"Типы абонементов — справочник; условия и цена фиксируются в карте при покупке",
+ ex:"«Какие бывают абонементы и что происходит с проданными при смене цены?»"},
+{role:"Администратор", a:"В зал клиент проходит по карте или QR из приложения через турникет. Каждый вход и выход фиксируем: по посещениям списываем пакетные абонементы и считаем загрузку.",
+ der:["Достаточно счётчика посещений в карточке клиента","Турникет — сущность модели данных","Нужен журнал посещений: каждая запись со временем входа и выхода"], derC:2,
+ req:"Посещение — сущность-журнал: вход/выход, фиксируется каждый факт",
+ ex:"«Как клиент попадает в зал и что вы при этом записываете?»"},
+{role:"Тренер", a:"Групповые — по расписанию. Занятие — это вид (йога, кроссфит), зал, тренер, дата и время. Мест ограниченное количество, на популярные без записи не попасть.",
+ der:["Занятие — комбинация: вид + зал + тренер + время, с ограничением мест и записью","Занятие — просто строка-название в расписании","Мест всегда хватает, запись не нужна"], derC:0,
+ req:"Занятие = вид + зал + тренер + время; вместимость ограничена, нужна запись",
+ ex:"«Из чего состоит занятие в расписании? Ограничены ли места?»"},
+{role:"Администратор", a:"Отменить запись можно не позднее чем за 2 часа до начала. Неявка на пакетном абонементе списывает посещение, а после трёх неявок подряд блокируем запись на неделю.",
+ der:["Неявки хранить не нужно — это негатив","Отмену лучше вообще запретить","Нужны: правило времени отмены, учёт неявок в данных и санкция-блокировка"], derC:2,
+ req:"Отмена за 2 часа; неявки считаются; после 3 подряд — блокировка на неделю",
+ ex:"«Что происходит, если клиент записался и не пришёл?» — вопрос об исключениях"},
+{role:"Тренер", a:"Один тренер ведёт несколько видов — я, например, йогу и стретчинг. И наоборот: кроссфит у нас ведут три разных тренера.",
+ der:["У тренера один вид — поле в таблице тренера","Тренер ↔ вид — многие-ко-многим: нужна связующая таблица","У вида один тренер — поле в таблице вида"], derC:1,
+ req:"Тренер ↔ вид занятия: многие-ко-многим (связующая таблица)",
+ ex:"«Может ли тренер вести разные виды? А один вид — разные тренеры?» — кардинальность с двух сторон"},
+{role:"Администратор", a:"Заморозка — только на безлимитах: до 30 дней в году, кусками от 7 дней. Каждый период записываем, срок карты автоматически продлевается.",
+ der:["Периоды заморозки — отдельная сущность с датами; срок карты продлевается","Достаточно флага is_frozen у карты","Заморозка — временное удаление карты из базы"], derC:0,
+ req:"Заморозка: сущность-период с датами, лимит 30 дней/год, продление срока карты",
+ ex:"«Как работает заморозка? Целиком или частями? Что со сроком карты?»"},
+{role:"Тренер", a:"Персональные тренировки тоже есть: клиент покупает пакет у конкретного тренера и записывается на свободные слоты в его графике.",
+ der:["Персоналки — те же групповые занятия, отдельно моделировать нечего","Достаточно записать телефон тренера","Нужны: пакет тренировок у конкретного тренера + записи на слоты его графика"], derC:2,
+ req:"Персональные тренировки: пакет у тренера + запись на слоты",
+ ex:"«Есть ли персональные тренировки и как на них записываются?»"},
+{role:"Владелец", a:"Есть корпоративные клиенты: компания покупает пакет карт для сотрудников и оплачивает их сама. Замораживать корпоративную карту сотрудник сам не может — только через администратора.",
+ der:["Достаточно пометки «корп» в имени клиента","Появляется сущность «компания»-плательщик; часть операций доступна только администратору","Корпоративных клиентов ведём в отдельной системе"], derC:1,
+ req:"Корпоративные абонементы: компания-плательщик; операции ограничены ролью",
+ ex:"«Кто платит за абонемент — всегда сам клиент?» — вопрос о плательщике"},
+{role:"Администратор", a:"За сутки до занятия система сама шлёт клиенту напоминание — пуш или SMS. Клиент для этого ничего не делает.",
+ der:["Системное событие по таймеру: за 24 часа система отправляет уведомление","Клиент сам ставит себе будильник — в систему не входит","Администратор обзванивает клиентов вручную"], derC:0,
+ req:"Напоминание за сутки: системное событие по времени (таймер)",
+ ex:"«Есть ли уведомления? Кто их инициирует?»"},
+{role:"Владелец", a:"Возврат абонемента: в течение 14 дней с покупки и если не было ни одного посещения — возвращаем всё. Иначе — пропорционально использованному.",
+ der:["Возврат — вопрос бухгалтерии, в систему не входит","Возврат всегда полный, условий нет","Правило с двумя условиями; для расчёта нужны цена в карте и журнал посещений"], derC:2,
+ req:"Возврат: полный при «14 дней и 0 посещений», иначе пропорциональный (нужны данные посещений)",
+ ex:"«Можно ли вернуть абонемент? На каких условиях?» — вопрос о деньгах назад"},
+{role:"Администратор", a:"Сейчас всё в Excel: вкладка «клиенты», вкладка «расписание», записи на персоналки — в WhatsApp у тренеров. В прошлом месяце два клиента купили один и тот же слот — скандал был до вечера.",
+ der:["Excel всех устраивает — можно оставить","Боль — двойная продажа слота: нужна защита на уровне данных (уникальность)","Проблема в тренерах — наймём внимательнее"], derC:1,
+ req:"Боль «как есть»: двойная запись на слот — нужна защита на уровне данных",
+ ex:"«Покажете, как вы ведёте учёт сейчас? Что чаще всего ломается?» — вопрос про as-is"}
+];
+const NT=TOPICS.length;
+
+/* ================= handout tasks ================= */
+const H_TASKS=[
+{id:"h1", type:"match", q:"Закрепим базовые маркеры: подберите конструкцию для требования.",
+ hint:"Ищите в каждой фразе слово-маркер из памятки выше: «история», «несколько и несколько», «не позднее чем», «дважды», «кусками».",
+ items:[
+  {l:"«Действующая карта одна, но нужна вся история карт клиента»", a:0},
+  {l:"«Тренер ведёт несколько видов, вид ведут несколько тренеров»", a:1},
+  {l:"«Отменить запись можно не позднее чем за 2 часа до начала»", a:2},
+  {l:"«Два клиента купили один и тот же слот — скандал»", a:3},
+  {l:"«Заморозка кусками от 7 дней, срок карты продлевается»", a:4}],
+ choices:["Таблица с историей и статусами (активна/закончилась)","Связующая таблица M:N","Условие по времени в процессе (XOR + таймер)","Уникальное ограничение на пару (слот, запись)","Отдельная сущность «период заморозки» с датами"],
+ expl:"Работа аналитика: в каждой фразе заказчика услышать слово-маркер («история», «несколько и несколько», «не позднее чем», «дважды продали», «периоды») и превратить его в конструкцию модели или процесса."},
+{id:"h2", type:"match", q:"И маркеры посложнее — из тех же ответов заказчика.",
+ hint:"Спросите у каждой фразы: это про данные (что хранить?) или про процесс (что и когда происходит?). Некоторые — про оба сразу.",
+ items:[
+  {l:"«За сутки до занятия система сама шлёт напоминание»", a:0},
+  {l:"«Компания покупает пакет карт и оплачивает их сама»", a:1},
+  {l:"«Полный возврат — только если не было ни одного посещения»", a:2},
+  {l:"«Купленная карта живёт по условиям на момент покупки»", a:3}],
+ choices:["Событие-таймер, которое запускает система (не человек)","Сущность «компания» + необязательная связь-плательщик у абонемента","Условие, проверяемое по журналу посещений","Снапшот цены и условий в самой карте"],
+ expl:"«Система сама» — таймер без актора-человека; «компания платит» — новый участник модели данных; «если не было посещений» — правило опирается на журнал: если журнала нет, правило не реализовать. Так требования цепляются друг за друга."}
+];
+
+/* ================= journey tasks ================= */
+const J_TASKS=[
+{id:"j1", type:"order", q:"Соберите «счастливый путь» клиента: от рекламы клуба до тренировки.",
+ hint:"С чего клиент может начать физически? Можно ли записаться на занятие, не имея абонемента? Что нужно иметь в руках у турникета?",
+ items:["Оплатить абонемент","Выбрать тип абонемента","Пройти турникет по QR","Записаться на групповое занятие","Получить карту и QR в приложении","Посещение зафиксировано"],
+ seq:[1,0,4,3,2,5],
+ expl:"Это скелет BPMN: покупка → доступ → запись → посещение. Дальше на него лягут ветвления: отмена за 2 часа, неявки, заморозка, возврат. Запись возможна только после покупки абонемента — это условие из интервью.",
+ journey:true},
+{id:"j2", type:"single", q:"Клиент отменяет запись за 40 минут до занятия. Как это показать на BPMN?",
+ legend:"Требование: «Отменить можно не позднее чем за 2 часа до начала. Позже — считается неявкой».",
+ hint:"«Не позднее чем» — это выбор одной из веток или параллельная работа? И что происходит в «поздней» ветке — просто отказ?",
+ opts:["XOR с условием «до начала ≥ 2 часов?»: ветка отмены и ветка «отмена невозможна, неявка»","Параллельный шлюз AND — отменяем и не отменяем одновременно","Задача «Подумать об отмене» без шлюза","Не показывать отмену на диаграмме"], correct:0,
+ expl:"«Не позднее чем» — условие по времени: эксклюзивный шлюз с условиями на потоках. Ветка «поздно» не просто отказывает — она порождает неявку, которая копится до санкции."},
+{id:"j3", type:"single", q:"«После трёх неявок подряд — блокировка записи на неделю». Какие конструкции нужны?",
+ hint:"У процесса нет памяти — стрелки не умеют считать до трёх. Где живёт счётчик? А «неделя» — это чья работа: человека или времени?",
+ opts:["Счётчик неявок в данных + XOR «третья подряд?» + событие-таймер «неделя» на снятие блокировки","Только текстовое примечание — в процесс это не влезает","AND-шлюз на три параллельных неявки","Отдельный несвязанный процесс без данных о неявках"], correct:0,
+ expl:"Правило живёт в двух мирах: в данных (история неявок — мы заложили её в записи на занятие) и в процессе (проверка, блокировка, таймер недели). Аналитик показывает оба конца ниточки."},
+{id:"j4", type:"single", q:"Клиент и система клуба — как расположить на BPMN?",
+ hint:"Подчиняется ли клиент потоку управления клуба? Может ли клуб «назначить клиенту задачу»? Если нет — что это значит для пулов?",
+ opts:["Клиент — отдельный пул; взаимодействие с системой — потоками сообщений","Клиент — дорожка внутри пула клуба, рядом с администратором","Клиента не показывать — он вне системы","Клиент — эллипс-актор, как на use case"], correct:0,
+ expl:"Клиент не подчиняется потоку управления клуба — он независимый участник: отдельный пул, message flow. Клиент-«дорожка» внутри пула компании — классическая ошибка практикума."},
+{id:"j5", type:"single", q:"Напоминание за сутки до занятия. Что это на диаграмме?",
+ legend:"Требование: «Система сама шлёт пуш или SMS, клиент ничего не делает».",
+ hint:"Кто нажимает кнопку «напомнить»? Никто. Какой элемент BPMN срабатывает сам, без человека?",
+ opts:["Событие-таймер в процессе системы: за 24 часа — задача «Отправить напоминание»","Задача клиента «Вспомнить о занятии» в его пуле","Администратор вручную обзванивает — задача в его дорожке","Напоминания на BPMN не показываются"], correct:0,
+ expl:"«Система сама, по времени» — событие-таймер без актора-человека. Ловушка «клиент сам себе напоминает» уже встречалась в use case фитнес-клуба — здесь она была бы той же ошибкой, только в BPMN."},
+{id:"j6", type:"single", q:"Возврат абонемента: «14 дней и ни одного посещения — полный возврат, иначе пропорционально». Конструкция?",
+ hint:"Сколько разных исходов у процесса возврата? Может ли у них быть один общий финал «Готово»?",
+ opts:["XOR по двум условиям (срок и посещения): ветки полного и пропорционального возврата","Параллельный шлюз: вернуть полностью и пропорционально одновременно","Один финал «Возврат сделан» без ветвления","Условия описать сноской, шлюз не ставить"], correct:0,
+ expl:"Два условия — «в течение 14 дней» и «0 посещений» — проверяются на XOR (или каскаде из двух XOR). У каждого исхода свой финал: «Возврат выполнен полностью», «Возврат выполнен частично», и не забудьте «Отказано» — если сроки вышли."},
+{id:"j7", type:"single", q:"Клиент подал заявку на заморозку карты. Что проверяет процесс перед заморозкой?",
+ legend:"Требования: «Заморозка — только на безлимитах, кусками от 7 дней, не больше 30 дней в году».",
+ hint:"Перечислите причины, по которым в заморозке могут отказать. Сколько их вы услышали на интервью?",
+ opts:["Каскад XOR: карта безлимитная? период ≥ 7 дней? остаток годового лимита достаточен?","Параллельный шлюз: проверить всё одновременно и заморозить в любом случае","Никаких проверок — просто заморозить","Проверки делает бухгалтер вручную, в процесс не включаем"], correct:0,
+ expl:"Три условия — три возможных отказа, каждый со своим сообщением клиенту. В ветке успеха не забудьте задачу «продлить срок карты» — это прямое следствие требования о продлении. А для корпоративной карты добавится ещё одна проверка: роль инициатора."},
+{id:"j8", type:"single", q:"Клиент прикладывает QR к турникету, а его абонемент истёк вчера. Что должно быть в процессе входа?",
+ hint:"Откуда процесс узнаёт, что карта истекла? Какие данные из ERD он читает?",
+ opts:["XOR «абонемент активен?»: ветка отказа с финалом «Вход отклонён» и уведомлением клиенту","Пропустить — разберёмся в конце месяца","Событие-таймер на сутки","Процесс входа не нужен: турникет сам разберётся"], correct:0,
+ expl:"Проверка активности выполняется на каждом проходе и опирается на данные карты (статус, даты) — вот где процесс встречается с ERD. Ветка отказа — полноценный сценарий со своим финалом, а не «ошибка, которой не бывает»."}
+];
+
+/* ================= ERD tasks ================= */
+const E_TASKS=[
+{id:"e1", type:"multi", q:"Шаг 1. Отметьте всё, что станет сущностями ERD.",
+ hint:"Сущность — то, о чём мы храним строки с атрибутами. Попробуйте мысленно завести строку про «2 часа до начала» — какие у неё атрибуты? Не получается — значит, это не сущность.",
+ opts:["Клиент","Абонемент","Тип абонемента","Занятие (в расписании)","Вид занятия","Тренер","Зал","Запись на занятие","Посещение","Компания (корпоративный клиент)","QR-код","«2 часа до начала»","Турникет"], correct:[0,1,2,3,4,5,6,7,8,9],
+ expl:"QR-код — атрибут, «2 часа» — правило процесса, турникет — железо. Компания — полноценная сущность: она плательщик корпоративных карт. Обратите внимание на пары «экземпляр/справочник»: абонемент/тип, занятие/вид."},
+{id:"e2", type:"match", q:"Шаг 2. Кардинальности — то, что вы выясняли вопросами на интервью.",
+ hint:"Читайте каждую пару с двух сторон: «сколько Б у одного А?» и «сколько А у одного Б?». M:N — только если с обеих сторон «много».",
+ items:[
+  {l:"Клиент — абонемент", a:1},
+  {l:"Тип абонемента — абонемент", a:1},
+  {l:"Тренер — вид занятия", a:2},
+  {l:"Занятие — запись на занятие", a:1},
+  {l:"Компания — абонемент", a:1},
+  {l:"Клиент — посещение", a:1}],
+ choices:["1:1","1:N","M:N"],
+ expl:"Ответ на «сколько карт у человека?» дал 1:N — «действующий один» это правило, а не кардинальность! Тренер—вид — единственная M:N: её разрешит связующая таблица. Компания—абонемент — 1:N, причём связь необязательная (не все карты корпоративные)."},
+{id:"e3", type:"single", q:"Шаг 3. Где хранить цену и условия купленного абонемента?",
+ legend:"Требование: «Купленная карта живёт по условиям на момент покупки».",
+ hint:"Мысленный эксперимент: маркетолог поднял цену безлимита на 20%. Что произойдёт с картой, купленной вчера, при каждом из вариантов?",
+ opts:["Копией в абонементе — фиксируются при покупке; в типе — актуальные условия для витрины","Только в типе абонемента — зачем дублировать","Пересчитывать из актуального прайса при каждом входе","В названии абонемента"], correct:0,
+ expl:"Снапшот на момент сделки — тот же приём, что исторический тариф в каршеринге и цена блюда в доставке еды. «Дублирование» здесь — не ошибка, а требование заказчика."},
+{id:"e4", type:"single", q:"Шаг 4. «Действующий абонемент один, но история хранится». Как выразить в модели?",
+ hint:"Чем отличаются строки «старой» и «новой» карты? Только датами и статусом. Нужны ли для этого разные таблицы?",
+ opts:["Все абонементы в одной таблице со статусом и датами; «один активный» — ограничение, а не структура","Хранить только последний абонемент, старые удалять","Отдельная таблица «старые абонементы» с копией всех полей","Поле history_json в таблице клиента"], correct:0,
+ expl:"История — это строки одной таблицы с датами и статусом. «Активный один» — ограничение целостности (частичный уникальный индекс по клиенту среди активных), а не повод плодить таблицы-дубли."},
+{id:"e5", type:"multi", q:"Шаг 5. Джуниор прислал фрагмент модели. Отметьте все ошибки.",
+ hint:"Начните с поля workout_ids: попробуйте написать SQL-запрос «кто записан на йогу в пятницу». Потом спросите у каждой строки-«строки» (type, hall): а что, если это переименуют?",
+ code:"Table client {\n  id int [pk]\n  name varchar\n  workout_ids varchar // id занятий через запятую\n}\n\nTable workout {\n  id int [pk]\n  type varchar\n  trainer_id int [ref: > trainer.id]\n  hall varchar\n  starts_at datetime\n  price decimal\n}",
+ opts:["Список id через запятую вместо таблицы записей на занятие","Вид занятия — строка type: справочника нет, «йога» и «Йога» станут разными видами","Зал — текстовое поле hall, а у зала есть вместимость и расписание","Нет сущности записи — значит, негде хранить статус «пришёл / неявка»","starts_at надо хранить строкой","У занятия не может быть цены"], correct:[0,1,2,3],
+ expl:"Четыре ошибки: «запятая» (нельзя ни join, ни целостность), тип-строка вместо справочника, зал-строка вместо сущности и потерянная запись на занятие — а на ней держатся неявки и санкции. Дата-время здесь корректного типа; цена у занятия допустима (разовые посещения)."},
+{id:"e6", type:"single", q:"Шаг 6. Чем защититься от двойной продажи одного слота персональной тренировки?",
+ legend:"Боль заказчика: «Два клиента купили один и тот же слот — скандал был до вечера».",
+ hint:"«Невозможно» и «маловероятно» — разные гарантии. Какой уровень системы может дать «невозможно»: интерфейс, человек или база данных?",
+ opts:["Уникальным ограничением на (тренер, дата-время) среди активных записей — конфликт невозможен физически","Попросить тренеров внимательнее смотреть WhatsApp","Показывать клиенту предупреждение «слот может быть занят»","Хранить у тренера счётчик проданных слотов"], correct:0,
+ expl:"Боль из Excel закрывается на уровне данных: уникальность делает двойную продажу невозможной, а не маловероятной. Предупреждения и внимательность — не архитектурные решения; счётчик не знает, какой именно слот занят."},
+{id:"e7", type:"single", q:"Шаг 7. Корпоративные абонементы: компания оплачивает карты сотрудников. Что меняется в модели?",
+ hint:"Кому бухгалтерия выставит счёт? По какому полю построить отчёт «все карты компании X»? Что случится со строкой company_name при переименовании компании?",
+ opts:["Появляется сущность «компания»; у абонемента — необязательная (0..1) связь с компанией-плательщиком","Достаточно поля company_name строкой у клиента","Отдельная таблица «корпоративные клиенты» с копией всех полей клиента","Ничего: кто платит — не дело модели данных"], correct:0,
+ expl:"Плательщик — участник данных: по нему выставляют счета и строят отчёты. Связь необязательная — обычные карты покупает сам клиент. Строка company_name развалится при первом же переименовании компании, а таблица-копия — то же дублирование, что student/teacher."},
+{id:"e8", type:"single", q:"Шаг 8. Возврат «пропорционально использованному». Что должно быть в модели, чтобы это посчитать?",
+ hint:"Из каких двух чисел складывается пропорция «использовано / оплачено»? Где живёт каждое из них?",
+ opts:["Журнал посещений, связанный с абонементом, + зафиксированная цена в абонементе","Поле refund_percent в типе абонемента","Достаточно поставить статус cancelled","Хранить процент возврата в таблице клиента"], correct:0,
+ expl:"Формула возврата опирается на два факта: сколько заплачено (снапшот цены в карте) и сколько использовано (посещения по этой карте). Если посещение не связано с абонементом — правило из интервью нереализуемо. Требования к процессу всегда проверяйте «а есть ли под это данные?»."},
+{id:"e9", type:"single", q:"Шаг 9. К чему привязать посещение (запись журнала турникета)?",
+ hint:"Вспомните списание пакета и возврат «пропорционально»: по чему их считать, если у клиента за годы было пять карт?",
+ opts:["К клиенту и к конкретному абонементу, по которому прошли","Только к клиенту — этого достаточно","К турникету, через который прошли","К записи на групповое занятие"], correct:0,
+ expl:"Посещение списывает пакет и участвует в расчёте возврата — значит, критично знать, по КАКОЙ карте прошли. Связь только с клиентом теряет эту информацию, как только карт становится больше одной."},
+{id:"e10", type:"match", q:"Шаг 10. Справочник или экземпляр? Классифицируйте.",
+ hint:"Тест: у этого есть дата, когда оно случилось? Тогда экземпляр. Это каталог, из которого выбирают? Тогда справочник.",
+ items:[
+  {l:"Тип абонемента «Безлимит»", a:0},
+  {l:"Абонемент Ивана, купленный 3 мая", a:1},
+  {l:"Вид занятия «йога»", a:0},
+  {l:"Йога в зале 2 в пятницу в 19:00", a:1},
+  {l:"Посещение Ивана во вторник в 8:12", a:1}],
+ choices:["Справочник: каталог возможного, живёт долго","Экземпляр: факт или событие с датами и снапшотами"],
+ expl:"Справочники описывают, что бывает; экземпляры фиксируют, что случилось. Снапшоты цен и условий живут в экземплярах, актуальные значения — в справочниках. Путаница между этими уровнями — источник половины ошибок ERD в практикуме."}
+];
+
+/* ================= stages ================= */
+const STAGES=[
+ {n:"Этап 1", t:"Заказчик", s:()=>S.started?"пройден":"открыт"},
+ {n:"Этап 2", t:"Интервью", s:()=>ivComplete()?("выведено "+ivDerOk()+"/"+NT):(S.ivDone?("разобрано "+ivDerDone()+"/"+NT):(S.myq.length+" ваших вопросов"))},
+ {n:"Этап 3", t:"Требования", s:()=>stageScore(H_TASKS).done===H_TASKS.length?"пройден":"памятка + 2 задания"},
+ {n:"Этап 4", t:"Процесс", s:()=>stageScore(J_TASKS).done+"/"+J_TASKS.length},
+ {n:"Этап 5", t:"Данные (ERD)", s:()=>stageScore(E_TASKS).done+"/"+E_TASKS.length},
+ {n:"Этап 6", t:"Реализация", s:()=>"итоги"}
+];
+function ivMarked(){ return Object.keys(S.ivMark).length }
+function ivHit(){ return Object.values(S.ivMark).filter(v=>v===1).length }
+function ivDerDone(){ return Object.keys(S.ivDer).length }
+function ivDerOk(){ let n=0; TOPICS.forEach((tp,i)=>{ if(S.ivDer[i]===tp.derC) n++ }); return n }
+function ivComplete(){ return S.ivDone && ivDerDone()>=NT && ivMarked()>=NT }
+function stageScore(list){
+  let done=0, ok=0;
+  list.forEach(t=>{ const r=S.ans[t.id]; if(r){done++; if(r.ok) ok++} });
+  return {done, ok, total:list.length};
+}
+function unlocked(i){
+  if(i===0) return true;
+  if(i===1) return S.started;
+  if(i===2) return ivComplete();
+  if(i===3) return stageScore(H_TASKS).done===H_TASKS.length;
+  if(i===4) return stageScore(J_TASKS).done===J_TASKS.length;
+  if(i===5) return stageScore(E_TASKS).done===E_TASKS.length;
+  return false;
+}
+
+/* ================= task engine ================= */
+function renderTask(t, idx, total){
+  const saved=S.ans[t.id];
+  const card=el(`<section class="task ${saved?"locked":""}"></section>`);
+  const state=saved?`<span class="task-state ${saved.ok?"ok":"err"}">${saved.ok?"✓ верно":"✗ неверно"}</span>`:"";
+  const label={single:"Один ответ",multi:"Несколько ответов",match:"Соответствие",order:"Порядок"}[t.type];
+  card.appendChild(el(`<div class="task-head"><span class="task-num">${idx+1} / ${total}</span><span class="task-type">${label}</span>${state}</div>`));
+  card.appendChild(el(`<div class="task-q">${t.q}</div>`));
+  const body=el(`<div class="task-body"></div>`);
+  card.appendChild(body);
+  if(t.legend) body.appendChild(el(`<p class="legend-note">${t.legend}</p>`));
+  if(t.code) body.appendChild(el(`<pre class="codeblock">${esc(t.code)}</pre>`));
+  if(t.hint && !saved) body.appendChild(el(`<details class="hintbox"><summary>Наводящая подсказка (сначала подумайте сами)</summary><p>${t.hint}</p></details>`));
+  const ctrl=el(`<div class="task-ctrl"><button class="checkbtn" type="button" disabled>Проверить</button></div>`);
+  const btn=ctrl.querySelector("button");
+
+  if(t.type==="single"||t.type==="multi"){
+    const it=t.type==="single"?"radio":"checkbox";
+    t.opts.forEach((o,oi)=>{
+      const opt=el(`<label class="opt"><input type="${it}" name="${t.id}" value="${oi}"><span>${o}</span></label>`);
+      opt.querySelector("input").addEventListener("change",()=>{btn.disabled=body.querySelectorAll("input:checked").length===0});
+      body.appendChild(opt);
+    });
+    btn.addEventListener("click",()=>{
+      const sel=[...body.querySelectorAll("input:checked")].map(x=>+x.value);
+      const corr=t.type==="single"?[t.correct]:t.correct;
+      const ok=sel.length===corr.length&&sel.every(v=>corr.includes(v));
+      S.ans[t.id]={a:sel,ok}; save(); renderAll();
+    });
+  }
+  if(t.type==="match"){
+    t.items.forEach(itm=>{
+      const row=el(`<div class="mrow"><div class="ml">${itm.l}</div><select><option value="">— выберите —</option>${t.choices.map((c,ci)=>`<option value="${ci}">${c}</option>`).join("")}</select></div>`);
+      row.querySelector("select").addEventListener("change",()=>{btn.disabled=[...body.querySelectorAll("select")].some(s=>s.value==="")});
+      body.appendChild(row);
+    });
+    btn.addEventListener("click",()=>{
+      const sel=[...body.querySelectorAll("select")].map(s=>+s.value);
+      const ok=sel.every((v,ri)=>v===t.items[ri].a);
+      S.ans[t.id]={a:sel,ok}; save(); renderAll();
+    });
+  }
+  if(t.type==="order"){
+    const zone=el(`<div><div class="ord-zone"><div class="ord-label">Ваш порядок (нажмите, чтобы убрать)</div><div class="ord-seq"></div></div><div class="ord-zone"><div class="ord-label">Шаги (нажмите, чтобы добавить)</div><div class="ord-pool"></div></div></div>`);
+    body.appendChild(zone);
+    const seqBox=zone.querySelector(".ord-seq"), poolBox=zone.querySelector(".ord-pool");
+    let seq=[];
+    function draw(){
+      seqBox.innerHTML=""; poolBox.innerHTML="";
+      seq.forEach((ii,pos)=>{
+        const c=el(`<button class="ordc" type="button"><span class="n">${pos+1}.</span>${t.items[ii]}</button>`);
+        c.addEventListener("click",()=>{seq=seq.filter(x=>x!==ii);draw()});
+        seqBox.appendChild(c);
+      });
+      t.items.forEach((lb,ii)=>{
+        if(seq.includes(ii))return;
+        const c=el(`<button class="ordc" type="button">${lb}</button>`);
+        c.addEventListener("click",()=>{seq.push(ii);draw()});
+        poolBox.appendChild(c);
+      });
+      btn.disabled=seq.length!==t.items.length;
+    }
+    draw();
+    btn.addEventListener("click",()=>{
+      const ok=seq.every((v,pos)=>v===t.seq[pos]);
+      S.ans[t.id]={a:seq.slice(),ok}; save(); renderAll();
+    });
+  }
+  card.appendChild(ctrl);
+  if(saved) showFb(card, body, t);
+  return card;
+}
+function showFb(card, body, t){
+  const saved=S.ans[t.id];
+  card.querySelector(".checkbtn").style.display="none";
+  if(t.type==="single"||t.type==="multi"){
+    const corr=t.type==="single"?[t.correct]:t.correct;
+    [...body.querySelectorAll(".opt")].forEach((opt,oi)=>{
+      const inp=opt.querySelector("input"); inp.disabled=true; inp.checked=(saved.a||[]).includes(oi);
+      if(corr.includes(oi)){opt.classList.add("is-ok");opt.appendChild(el(`<span class="mark">✓</span>`))}
+      else if((saved.a||[]).includes(oi)){opt.classList.add("is-err");opt.appendChild(el(`<span class="mark">✗</span>`))}
+    });
+  }
+  if(t.type==="match"){
+    [...body.querySelectorAll(".mrow")].forEach((row,ri)=>{
+      const s=row.querySelector("select"); s.value=String(saved.a[ri]); s.disabled=true;
+      const good=saved.a[ri]===t.items[ri].a;
+      row.classList.add(good?"is-ok":"is-err");
+      if(!good) row.appendChild(el(`<div class="fix">Правильно: ${t.choices[t.items[ri].a]}</div>`));
+    });
+  }
+  if(t.type==="order"){
+    const seqBox=body.querySelector(".ord-seq"), poolZone=body.querySelector(".ord-pool").closest(".ord-zone");
+    seqBox.innerHTML="";
+    (saved.a||[]).forEach((ii,pos)=>{
+      const good=t.seq[pos]===ii;
+      seqBox.appendChild(el(`<span class="ordc ${good?"is-ok":"is-err"}"><span class="n">${pos+1}.</span>${t.items[ii]}</span>`));
+    });
+    poolZone.style.display="none";
+    if(!saved.ok) body.appendChild(el(`<p class="ord-correct"><b>Правильный порядок:</b> ${t.seq.map(ii=>t.items[ii]).join(" → ")}</p>`));
+  }
+  const extra = t.journey ? `<div class="journey">
+    <span class="jstep"><span class="je">🏷️</span>Тип абонемента</span><span class="jarr">→</span>
+    <span class="jstep"><span class="je">💳</span>Оплата</span><span class="jarr">→</span>
+    <span class="jstep"><span class="je">📱</span>Карта и QR</span><span class="jarr">→</span>
+    <span class="jstep"><span class="je">🧘</span>Запись на занятие</span><span class="jarr">→</span>
+    <span class="jstep"><span class="je">🚪</span>Турникет</span><span class="jarr">→</span>
+    <span class="jstep"><span class="je">✅</span>Посещение</span>
+  </div>`:"";
+  card.appendChild(el(`<div class="fb ${saved.ok?"ok":"err"}"><b class="v">${saved.ok?"Верно.":"Неверно."}</b>${t.expl}${extra}</div>`));
+}
+
+/* ====== эталонный разбор: открывается на финальном этапе ====== */
+const REF_HTML = `
+<div class="card ref">
+  <h3 style="margin-top:0">Эталонное решение с разбором</h3>
+  <p class="hint" style="margin:0 0 12px">Теперь, когда вы прошли кейс сами, сверьтесь с эталоном. Каждый блок открывается отдельно — сравнивайте со своими ответами и своей будущей диаграммой.</p>
+
+  <details class="spoil"><summary>1. ERD: клиент, абонементы, посещения</summary><div class="sp-in">
+    <div class="diagwrap">
+      <svg class="diag" viewBox="0 0 820 380" role="img" aria-label="Схема: клиент, компания, абонемент, тип абонемента, заморозка, посещения">
+        <defs>
+          <marker id="many" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 M1,6 L11,6 M1,11 L11,6"/></marker>
+          <marker id="one" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M6,1 L6,11"/></marker>
+        </defs>
+        <rect class="ent" x="30" y="30" width="160" height="52"/>
+        <text class="t" x="46" y="53">company</text><text class="s" x="46" y="70">компания-плательщик</text>
+        <rect class="ent ent-key" x="30" y="150" width="160" height="52"/>
+        <text class="t" x="46" y="173">client</text><text class="s" x="46" y="190">человек, один аккаунт</text>
+        <rect class="ent ent-key" x="330" y="88" width="170" height="52"/>
+        <text class="t" x="346" y="111">membership</text><text class="s" x="346" y="128">купленная карта</text>
+        <rect class="ent" x="630" y="28" width="160" height="52"/>
+        <text class="t" x="646" y="51">membership_type</text><text class="s" x="646" y="68">справочник тарифов</text>
+        <rect class="ent" x="630" y="158" width="160" height="52"/>
+        <text class="t" x="646" y="181">freeze_period</text><text class="s" x="646" y="198">периоды заморозки</text>
+        <rect class="ent" x="330" y="288" width="170" height="52"/>
+        <text class="t" x="346" y="311">visit</text><text class="s" x="346" y="328">журнал турникета</text>
+        <path class="rel" d="M190,56 L330,102" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="228" y="66">0..1 → N</text>
+        <path class="rel" d="M190,176 L330,126" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="228" y="166">1 → N</text>
+        <path class="rel" d="M500,102 L630,56" marker-start="url(#many)" marker-end="url(#one)"/><text class="rl" x="524" y="70">N → 1</text>
+        <path class="rel" d="M500,126 L630,184" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="524" y="168">1 → N</text>
+        <path class="rel" d="M415,140 L415,288" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="424" y="220">1 → N</text>
+        <path class="rel" d="M110,202 L110,314 L330,314" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="122" y="308">1 → N</text>
+      </svg>
+      <p class="cap">Crow’s Foot: чёрточка — «ровно один», «лапка» — «много». Связь читается с двух сторон: у клиента много карт, но каждая карта принадлежит одному клиенту.</p>
+    </div>
+    <h4>Почему именно так</h4>
+    <ul>
+      <li><b>client — один человек, одна строка.</b> Роли не порождают таблиц-дублей: тренер, который сам ходит на йогу, остаётся одним клиентом.</li>
+      <li><b>membership_type — справочник, membership — экземпляр.</b> Тип отвечает «что бывает», карта — «что купил Иван 3 мая».</li>
+      <li><b>Цена лежит в обоих местах, и это не ошибка.</b> В типе — актуальная витрина, в карте — снимок на момент покупки.</li>
+      <li><b>freeze_period — сущность, а не флаг.</b> Флаг ответил бы только «заморожена ли сейчас», а нужны даты каждого периода: по ним считается лимит 30 дней и продлевается срок карты.</li>
+      <li><b>company — необязательный плательщик</b> (0..1): обычную карту покупает сам клиент.</li>
+      <li><b>visit связан и с клиентом, и с картой:</b> у человека за годы пять карт, а списывать посещение нужно с конкретной.</li>
+    </ul>
+  </div></details>
+
+  <details class="spoil"><summary>2. ERD: разрешение «многие-ко-многим» тренер ↔ вид занятия</summary><div class="sp-in">
+    <div class="diagwrap">
+      <svg class="diag" viewBox="0 0 700 150" role="img" aria-label="Схема: тренер, связующая таблица, вид занятия">
+        <rect class="ent ent-key" x="20" y="45" width="150" height="52"/>
+        <text class="t" x="36" y="68">trainer</text><text class="s" x="36" y="85">Аня, Марк, Олег</text>
+        <rect class="ent" x="255" y="45" width="190" height="52"/>
+        <text class="t" x="271" y="68">trainer_workout_type</text><text class="s" x="271" y="85">кто что может вести</text>
+        <rect class="ent" x="530" y="45" width="150" height="52"/>
+        <text class="t" x="546" y="68">workout_type</text><text class="s" x="546" y="85">йога, кроссфит…</text>
+        <path class="rel" d="M170,71 L255,71" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="188" y="63">1 → N</text>
+        <path class="rel" d="M445,71 L530,71" marker-start="url(#many)" marker-end="url(#one)"/><text class="rl" x="463" y="63">N → 1</text>
+      </svg>
+      <p class="cap">Связующая таблица превращает одну связь M:N в две связи 1:N — и заодно даёт место для атрибутов самой связи (например, дата сертификации тренера по виду).</p>
+    </div>
+    <p>Аня ведёт йогу и стретчинг, кроссфит ведут трое — «много» с обеих сторон. Поле <code>trainer_id</code> в <code>workout_type</code> означало бы «у вида один тренер», поле <code>type</code> в <code>trainer</code> — «тренер ведёт один вид». Оба варианта противоречат интервью.</p>
+  </div></details>
+
+  <details class="spoil"><summary>3. ERD: расписание, записи и персональные тренировки</summary><div class="sp-in">
+    <div class="diagwrap">
+      <svg class="diag" viewBox="0 0 820 350" role="img" aria-label="Схема: вид занятия, тренер, зал, занятие, запись, клиент">
+        <rect class="ent" x="20" y="20" width="160" height="50"/><text class="t" x="36" y="42">workout_type</text><text class="s" x="36" y="59">какой вид</text>
+        <rect class="ent ent-key" x="20" y="120" width="160" height="50"/><text class="t" x="36" y="142">trainer</text><text class="s" x="36" y="159">кто ведёт</text>
+        <rect class="ent" x="20" y="220" width="160" height="50"/><text class="t" x="36" y="242">hall</text><text class="s" x="36" y="259">где, вместимость</text>
+        <rect class="ent ent-key" x="330" y="105" width="180" height="62"/><text class="t" x="346" y="130">workout</text><text class="s" x="346" y="148">занятие расписания:</text><text class="s" x="346" y="162">вид + тренер + зал + время</text>
+        <rect class="ent ent-key" x="620" y="105" width="170" height="62"/><text class="t" x="636" y="130">booking</text><text class="s" x="636" y="148">запись клиента,</text><text class="s" x="636" y="162">статус и неявки</text>
+        <rect class="ent ent-key" x="330" y="265" width="160" height="50"/><text class="t" x="346" y="287">client</text><text class="s" x="346" y="304">кто записался</text>
+        <path class="rel" d="M180,45 L330,120" marker-start="url(#one)" marker-end="url(#many)"/>
+        <path class="rel" d="M180,145 L330,140" marker-start="url(#one)" marker-end="url(#many)"/>
+        <path class="rel" d="M180,245 L330,158" marker-start="url(#one)" marker-end="url(#many)"/>
+        <path class="rel" d="M510,136 L620,136" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="528" y="128">1 → N</text>
+        <path class="rel" d="M490,282 L620,167" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="520" y="240">1 → N</text>
+      </svg>
+      <p class="cap">Три справочника слева собираются в конкретное занятие, а booking — связующая таблица между занятием и клиентом со своей жизнью: booked → attended / cancelled / no_show.</p>
+    </div>
+    <p><b>Почему booking обязателен.</b> Без него негде хранить запись, а вместе с ней исчезают неявки — и правило «после трёх неявок блокировать» становится нереализуемым. Правило из интервью умирает молча, если под него не завели данные.</p>
+    <div class="diagwrap">
+      <svg class="diag" viewBox="0 0 800 240" role="img" aria-label="Схема: клиент, тренер, пакет персоналок, слот">
+        <rect class="ent ent-key" x="20" y="35" width="150" height="50"/><text class="t" x="36" y="57">client</text><text class="s" x="36" y="74">купил пакет</text>
+        <rect class="ent ent-key" x="20" y="150" width="150" height="50"/><text class="t" x="36" y="172">trainer</text><text class="s" x="36" y="189">у кого купил</text>
+        <rect class="ent" x="320" y="90" width="180" height="56"/><text class="t" x="336" y="113">personal_package</text><text class="s" x="336" y="131">N тренировок, цена</text>
+        <rect class="ent" x="620" y="90" width="160" height="56"/><text class="t" x="636" y="113">personal_slot</text><text class="s" x="636" y="131">запись на время</text>
+        <path class="rel" d="M170,60 L320,105" marker-start="url(#one)" marker-end="url(#many)"/>
+        <path class="rel" d="M170,175 L320,131" marker-start="url(#one)" marker-end="url(#many)"/>
+        <path class="rel" d="M500,118 L620,118" marker-start="url(#one)" marker-end="url(#many)"/><text class="rl" x="530" y="110">1 → N</text>
+      </svg>
+      <p class="cap">Пакет покупается у конкретного тренера, поэтому связи идут и от клиента, и от тренера. На паре «тренер + время» слота стоит уникальное ограничение — оно и закрывает двойную продажу из WhatsApp.</p>
+    </div>
+  </div></details>
+
+  <details class="spoil"><summary>4. Таблица всех связей с кардинальностями</summary><div class="sp-in">
+    <div class="tblwrap"><table>
+      <tr><th>Связь</th><th>Кардинальность</th><th>Почему так</th></tr>
+      <tr><td>client → membership</td><td>1 : N</td><td>Карты копятся годами; «активная одна» — правило, не связь 1:1</td></tr>
+      <tr><td>membership_type → membership</td><td>1 : N</td><td>Справочник и экземпляр</td></tr>
+      <tr><td>company → membership</td><td>0..1 : N</td><td>Обычные карты покупает сам клиент — связь необязательная</td></tr>
+      <tr><td>membership → freeze_period</td><td>1 : N</td><td>«Кусками от 7 дней, до 30 в году» — нужны строки с датами</td></tr>
+      <tr><td>client → visit, membership → visit</td><td>1 : N</td><td>Нужны списание пакета и расчёт возврата</td></tr>
+      <tr><td>trainer ↔ workout_type</td><td>M : N</td><td>Разрешается таблицей trainer_workout_type</td></tr>
+      <tr><td>workout_type / trainer / hall → workout</td><td>1 : N</td><td>Занятие — комбинация справочников плюс время</td></tr>
+      <tr><td>workout → booking, client → booking</td><td>1 : N</td><td>booking — связующая таблица со своим статусом</td></tr>
+      <tr><td>client / trainer → personal_package</td><td>1 : N</td><td>Пакет куплен у конкретного тренера</td></tr>
+      <tr><td>personal_package → personal_slot</td><td>1 : N</td><td>Слот — факт с датой, пакет — покупка</td></tr>
+    </table></div>
+  </div></details>
+
+  <details class="spoil"><summary>5. Полный код модели (DBML для dbdiagram.io)</summary><div class="sp-in">
+<pre>Table client {
+  id int [pk]
+  full_name varchar
+  phone varchar
+  email varchar
+  status varchar          // active / deleted — удаляем «мягко»
+}
+
+Table company {           // корпоративный плательщик
+  id int [pk]
+  name varchar
+  inn varchar
+}
+
+Table membership_type {   // СПРАВОЧНИК: актуальная витрина тарифов
+  id int [pk]
+  name varchar            // безлимит / утренний / пакет-12
+  price decimal(10,2)     // деньги — decimal, никогда float
+  visit_limit int         // null = безлимит
+  time_limit_to time      // 16:00 для утреннего
+  freeze_days_per_year int
+}
+
+Table membership {        // ЭКЗЕМПЛЯР: купленная карта
+  id int [pk]
+  client_id int [ref: &gt; client.id]
+  company_id int [ref: &gt; company.id, null]   // 0..1 — плательщик
+  membership_type_id int [ref: &gt; membership_type.id]
+  price decimal(10,2)     // СНИМОК цены на момент покупки
+  visit_limit int         // снимок условий
+  time_limit_to time
+  starts_on date
+  ends_on date            // сдвигается при заморозке
+  status varchar          // active / frozen / expired / refunded
+  // правило: не более одной active-карты на клиента
+}
+
+Table freeze_period {
+  id int [pk]
+  membership_id int [ref: &gt; membership.id]
+  starts_on date
+  ends_on date            // не короче 7 дней; сумма за год &lt;= 30
+}
+
+Table visit {             // журнал турникета
+  id int [pk]
+  client_id int [ref: &gt; client.id]
+  membership_id int [ref: &gt; membership.id]   // по какой карте прошли
+  entered_at datetime
+  left_at datetime
+}
+
+Table trainer {
+  id int [pk]
+  full_name varchar
+  status varchar          // active / dismissed — не удаляем
+}
+
+Table workout_type {      // справочник видов
+  id int [pk]
+  name varchar
+}
+
+Table trainer_workout_type {   // разрешение M:N
+  id int [pk]
+  trainer_id int [ref: &gt; trainer.id]
+  workout_type_id int [ref: &gt; workout_type.id]
+}
+
+Table hall {
+  id int [pk]
+  club_id int
+  name varchar
+  capacity int
+}
+
+Table workout {           // занятие в расписании
+  id int [pk]
+  workout_type_id int [ref: &gt; workout_type.id]
+  trainer_id int [ref: &gt; trainer.id]
+  hall_id int [ref: &gt; hall.id]
+  starts_at datetime
+  capacity int            // не больше вместимости зала
+  status varchar          // scheduled / cancelled
+}
+
+Table booking {           // запись на групповое занятие
+  id int [pk]
+  workout_id int [ref: &gt; workout.id]
+  client_id int [ref: &gt; client.id]
+  status varchar          // booked / cancelled / attended / no_show
+  created_at datetime
+  indexes {
+    (workout_id, client_id) [unique]
+  }
+}
+
+Table personal_package {
+  id int [pk]
+  client_id int [ref: &gt; client.id]
+  trainer_id int [ref: &gt; trainer.id]
+  sessions_total int
+  sessions_used int
+  price decimal(10,2)
+}
+
+Table personal_slot {
+  id int [pk]
+  package_id int [ref: &gt; personal_package.id]
+  trainer_id int [ref: &gt; trainer.id]
+  starts_at datetime
+  status varchar          // booked / done / cancelled / no_show
+  indexes {
+    (trainer_id, starts_at) [unique]   // защита от двойной продажи
+  }
+}</pre>
+  </div></details>
+
+  <details class="spoil"><summary>6. BPMN: три готовые схемы процессов</summary><div class="sp-in">
+    <div class="legend"><span><b>◯</b> старт</span><span><b>◉</b> финал</span><span><b>▭</b> задача</span><span><b>◇ ×</b> XOR, ровно одна ветка</span><span><b>⏱</b> таймер</span></div>
+    <h4>Процесс 1. Покупка абонемента</h4>
+    <div class="bpx">
+      <div class="bp-node"><div class="bp-start"></div><div class="bp-cap">Клиент выбрал тариф</div></div>
+      <div class="bp-arr"></div>
+      <div class="bp-node"><div class="bp-task">Сформировать заказ</div></div>
+      <div class="bp-arr"></div>
+      <div class="bp-node"><div class="bp-task">Провести оплату</div></div>
+      <div class="bp-arr"></div>
+      <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Оплата прошла?</div></div>
+      <div class="bp-col">
+        <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Выпустить карту и QR</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Абонемент активен</div></div></div>
+        <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Оплата отклонена</div></div></div>
+      </div>
+    </div>
+    <p>Старт назван фактом, задачи — глаголами, у веток XOR подписаны условия, финалов два: «оплата отклонена» нельзя схлопывать в общий «Конец». В базе успешная ветка создаёт строку <code>membership</code> со снимком цены из справочника.</p>
+
+    <h4>Процесс 2. Запись на занятие</h4>
+    <div class="bpx">
+      <div class="bp-node"><div class="bp-start"></div><div class="bp-cap">Клиент выбрал занятие</div></div>
+      <div class="bp-arr"></div>
+      <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Карта активна?</div></div>
+      <div class="bp-col">
+        <div class="bp-row">
+          <div class="bp-arr lbl" data-l="да"></div>
+          <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Есть места?</div></div>
+          <div class="bp-col">
+            <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Создать запись</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Запись подтверждена</div></div></div>
+            <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Мест нет</div></div></div>
+          </div>
+        </div>
+        <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Нужен абонемент</div></div></div>
+      </div>
+    </div>
+    <p>Проверка «карта активна» читает статус и даты карты, проверка мест считает записи со статусом booked. Вот где процесс встречается с моделью: <b>каждое условие на схеме обязано иметь опору в данных</b>.</p>
+
+    <h4>Процесс 3. Отмена записи и неявки</h4>
+    <div class="bpx">
+      <div class="bp-node"><div class="bp-start"></div><div class="bp-cap">Запрос отмены поступил</div></div>
+      <div class="bp-arr"></div>
+      <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">До начала ≥ 2 часов?</div></div>
+      <div class="bp-col">
+        <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Отменить запись, вернуть место</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Запись отменена</div></div></div>
+        <div class="bp-row">
+          <div class="bp-arr lbl" data-l="нет"></div>
+          <div class="bp-node"><div class="bp-task">Зафиксировать неявку</div></div>
+          <div class="bp-arr"></div>
+          <div class="bp-gwrap"><div class="bp-gw"><span>×</span></div><div class="bp-cap">Третья подряд?</div></div>
+          <div class="bp-col">
+            <div class="bp-row"><div class="bp-arr lbl" data-l="да"></div><div class="bp-node"><div class="bp-task">Заблокировать запись</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-timer">⏱</div><div class="bp-cap">через 7 дней</div></div><div class="bp-arr"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Блокировка снята</div></div></div>
+            <div class="bp-row"><div class="bp-arr lbl" data-l="нет"></div><div class="bp-node"><div class="bp-end"></div><div class="bp-cap">Неявка зафиксирована</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p><b>Три вещи, за которые снимают баллы.</b> «Подождать неделю» рисуют задачей — но ждать не работа, это таймер. Счётчик «третья подряд» негде хранить, если в модели нет статуса <code>no_show</code>. И один общий финал вместо трёх осмысленных исходов.</p>
+  </div></details>
+
+  <h3>Что меняется в базе: семь ситуаций из жизни клуба</h3>
+  <p>Самая полезная проверка модели — прогнать через неё реальные события.</p>
+
+  <details class="spoil"><summary>Кейс 1. Увольняется тренер Марк</summary><div class="sp-in">
+    <p class="who">Администратор: «Марк уволился с 1 сентября, уберите его из системы».</p>
+    <p>На Марка завязаны тридцать прошедших занятий, две записи на будущее, восемь оплаченных пакетов персоналок и строки в <code>trainer_workout_type</code>.</p>
+    <div class="bad"><b>Наивно: DELETE FROM trainer WHERE id = 3</b>При каскадном удалении вместе с Марком исчезнут занятия, а с ними записи клиентов и история посещений. При SET NULL останутся занятия-сироты без тренера. При строгом ограничении база просто не даст удалить — и администратор придёт с «почему не работает».</div>
+    <div class="good"><b>Правильно: мягкое удаление</b><code>UPDATE trainer SET status = 'dismissed'</code>. История цела, отчёты за прошлые месяцы не меняются, в списках выбора Марка больше нет. Внешние ключи — ON DELETE RESTRICT.</div>
+    <div class="ba">
+      <div class="b"><h5>Было</h5><table><tr><th>id</th><th>ФИО</th><th>status</th></tr><tr><td>3</td><td>Марк</td><td>active</td></tr></table></div>
+      <div class="b"><h5>Стало</h5><table><tr><th>id</th><th>ФИО</th><th>status</th></tr><tr class="chg"><td>3</td><td>Марк</td><td>dismissed</td></tr></table></div>
+    </div>
+    <p>А что с будущими занятиями и пакетами — это вопрос к заказчику, и задать его надо прямо: «Занятия уволенного отменяются или передаются другому? Оплаченные пакеты — возврат, перевод или доработка?» Пока ответа нет, решение идёт в <b>допущения</b>.</p>
+    <p class="hint">Приём переносимый: <b>сущности с историей не удаляют физически</b> — клиент, тренер, товар, сотрудник получают статус, а не DELETE.</p>
+  </div></details>
+
+  <details class="spoil"><summary>Кейс 2. Клуб поднял цену безлимита с 4 000 до 5 000 ₽</summary><div class="sp-in">
+    <p class="who">Владелец: «С понедельника новая цена. У тех, кто уже купил, ничего не меняем».</p>
+    <p>Меняется <b>одна строка</b> в справочнике. Проданные карты не трогаются вообще: в каждой лежит своя цена.</p>
+    <div class="ba">
+      <div class="b"><h5>membership_type</h5><table><tr><th>id</th><th>name</th><th>price</th></tr><tr class="chg"><td>1</td><td>Безлимит</td><td>4 000 → 5 000</td></tr></table></div>
+      <div class="b"><h5>membership</h5><table><tr><th>id</th><th>клиент</th><th>price</th></tr><tr><td>17</td><td>Иван</td><td>4 000 — без изменений</td></tr><tr><td>18</td><td>Пётр</td><td>4 000 — без изменений</td></tr></table></div>
+    </div>
+    <div class="bad"><b>Как ломается модель без снимка</b>Если цена берётся из справочника, в понедельник у Ивана задним числом подорожает оплаченная карта. Возврат посчитается от 5 000 вместо 4 000, бухгалтерия получит расхождение с кассой.</div>
+    <p class="hint">Тот же приём: тариф поездки в каршеринге, цена блюда в доставке, цена билета в кино. Маркер всегда один — «даже если потом изменили».</p>
+  </div></details>
+
+  <details class="spoil"><summary>Кейс 3. Клиент не пришёл третий раз подряд</summary><div class="sp-in">
+    <p class="who">Правило: «После трёх неявок подряд блокируем запись на неделю».</p>
+    <div class="ba">
+      <div class="b"><h5>booking</h5><table><tr><th>id</th><th>занятие</th><th>status</th></tr><tr><td>101</td><td>Йога 12.08</td><td>no_show</td></tr><tr><td>118</td><td>Йога 15.08</td><td>no_show</td></tr><tr class="chg"><td>133</td><td>Йога 19.08</td><td>booked → no_show</td></tr></table></div>
+      <div class="b"><h5>Следствие</h5><table><tr><th>клиент</th><th>блокировка до</th></tr><tr class="new"><td>Иван</td><td>26.08 (19.08 + 7 дней)</td></tr></table></div>
+    </div>
+    <p><b>Где хранить блокировку — два варианта, оба принимаются.</b> Вычислять на лету по трём последним записям (нет лишних данных, но запрос на каждую попытку) или хранить явно в <code>booking_ban</code> с датой окончания (быстро и видно в интерфейсе, но нужно аккуратное снятие по таймеру).</p>
+    <div class="bad"><b>Что нельзя</b>Хранить у клиента одно поле no_show_count. Слово «подряд» теряется: пришёл на занятие — счётчик должен обнулиться, а по одному числу непонятно, когда это произошло.</div>
+  </div></details>
+
+  <details class="spoil"><summary>Кейс 4. Клуб отменил занятие — заболел тренер</summary><div class="sp-in">
+    <p class="who">Администратор: «Кроссфит в четверг отменяем, там было 14 записей».</p>
+    <p>Одна строка занятия и четырнадцать строк записей. Ключевая тонкость: <b>это не неявка клиентов</b> — виноват клуб, санкции применять нельзя.</p>
+    <div class="ba">
+      <div class="b"><h5>workout</h5><table><tr><th>id</th><th>занятие</th><th>status</th></tr><tr class="chg"><td>77</td><td>Кроссфит 21.08</td><td>scheduled → cancelled</td></tr></table></div>
+      <div class="b"><h5>booking (14 строк)</h5><table><tr><th>status</th><th>действие</th></tr><tr class="chg"><td>booked → cancelled</td><td>причина: отмена клубом</td></tr><tr class="new"><td>—</td><td>вернуть списанные посещения</td></tr></table></div>
+    </div>
+    <div class="bad"><b>Частая ошибка проектирования</b>Один общий статус cancelled без указания, кто отменил. Через месяц никто не ответит, сколько занятий сорвал клуб — а это ключевая метрика качества. Решение: отдельный статус cancelled_by_club или поле cancel_reason.</div>
+    <p>Плюс уведомления записавшимся — асинхронно: если сервис рассылки лежит, отмена занятия всё равно должна пройти.</p>
+  </div></details>
+
+  <details class="spoil"><summary>Кейс 5. «Кроссфит» переименовали в «Функциональный тренинг»</summary><div class="sp-in">
+    <p class="who">Маркетолог: «Меняем название направления во всей сети».</p>
+    <p>В правильной модели это <b>одна строка</b> справочника — и все 4 000 прошедших и будущих занятий подхватывают новое название, потому что хранят <code>workout_type_id</code>, а не текст.</p>
+    <div class="ba">
+      <div class="b"><h5>Правильно: справочник</h5><table><tr><th>id</th><th>name</th></tr><tr class="chg"><td>4</td><td>Кроссфит → Функциональный тренинг</td></tr></table><p class="hint" style="margin-top:5px">UPDATE одной строки, ссылки не трогаем</p></div>
+      <div class="b"><h5>Неправильно: строка в занятии</h5><table><tr><th>workout.type</th><th></th></tr><tr class="del"><td>"Кроссфит"</td><td>4 000 строк</td></tr><tr class="del"><td>"кроссфит"</td><td>опечатки</td></tr><tr class="del"><td>"Кросфит"</td><td>ещё опечатки</td></tr></table><p class="hint" style="margin-top:5px">Массовый UPDATE, часть строк не найдётся</p></div>
+    </div>
+    <p>Поэтому в задании про модель джуниора поле <code>type varchar</code> отмечено как ошибка: без справочника «йога» и «Йога» — разные виды, и отчёт по направлениям развалится.</p>
+  </div></details>
+
+  <details class="spoil"><summary>Кейс 6. Клиент требует удалить свои персональные данные</summary><div class="sp-in">
+    <p class="who">Юрист: «Пришло заявление на удаление персональных данных».</p>
+    <p>Конфликт двух требований: закон требует убрать персональные данные, бухгалтерия — сохранить финансовые операции и посещения за отчётный период.</p>
+    <div class="good"><b>Решение: анонимизация вместо удаления</b>Персональные поля затираются, строка и связи остаются: <code>full_name = 'Удалённый клиент #4821'</code>, телефон и email — null, статус deleted. Продажи и посещения сохраняются, но за ними больше нет человека.</div>
+    <div class="ba">
+      <div class="b"><h5>client — было</h5><table><tr><th>id</th><th>ФИО</th><th>телефон</th></tr><tr><td>4821</td><td>Иван Петров</td><td>+7 999…</td></tr></table></div>
+      <div class="b"><h5>client — стало</h5><table><tr><th>id</th><th>ФИО</th><th>телефон</th></tr><tr class="chg"><td>4821</td><td>Удалённый #4821</td><td>—</td></tr></table></div>
+    </div>
+    <p><b>Что при этом не ломается:</b> отчёты «сколько продано карт в июле» и «загрузка клуба по часам» остаются верными, потому что строки на месте. Физический DELETE сломал бы оба задним числом.</p>
+  </div></details>
+
+  <details class="spoil"><summary>Кейс 7. Два клиента жмут «Записаться» на последнее место одновременно</summary><div class="sp-in">
+    <p class="who">Из жизни: на кроссфит осталось одно место, две заявки приходят с разницей в 20 миллисекунд.</p>
+    <p>Обе транзакции читают «занято 19 из 20», обе решают «место есть», обе создают запись. В зале 21-й человек — ровно та боль, из-за которой заказчик и пришёл.</p>
+    <div class="bad"><b>Почему проверка «если мест меньше вместимости» не спасает</b>Между чтением количества и вставкой проходит время. На уровне изоляции Read Committed (по умолчанию в PostgreSQL) вторая транзакция не видит ещё не закоммиченную запись первой. Это гонка, и «проверить перед вставкой» её не лечит.</div>
+    <div class="good"><b>Три рабочих способа</b>1. Заблокировать строку занятия: <code>SELECT … FROM workout WHERE id = 77 FOR UPDATE</code> — вторая транзакция ждёт и видит актуальную картину.<br>2. Уровень изоляции Serializable — база отклонит конфликтующую транзакцию, но приложение обязано уметь её повторить.<br>3. Заранее создать строки-места (как кресла в кинотеатре) и повесить уникальность — конфликт станет физически невозможен.</div>
+    <p>А двойная продажа слота персоналки лечится проще всего третьим способом: уникальный индекс на <code>(trainer_id, starts_at)</code>. Вторая вставка упадёт при любом уровне изоляции, и приложение покажет «слот уже занят».</p>
+    <p class="hint"><b>Правило для защиты:</b> сначала назовите аномалию (потерянное обновление, фантом), потом выбирайте инструмент — ограничение, блокировку строки или уровень изоляции. Начинать с «поднимем изоляцию» почти всегда дороже и слабее, чем поставить unique.</p>
+  </div></details>
+
+  <details class="spoil"><summary>Правила, которых не видно на схеме</summary><div class="sp-in">
+    <p>Диаграмма показывает структуру, но не всё требование. Это то, что обязательно дописывают текстом к ERD — иначе разработчик о них не узнает.</p>
+    <div class="tblwrap"><table>
+      <tr><th>Правило</th><th>Где реализуется</th></tr>
+      <tr><td>У клиента не более одной активной карты</td><td>Частичный уникальный индекс по client_id среди active</td></tr>
+      <tr><td>Заморозка: только безлимит, ≥ 7 дней, ≤ 30 в году</td><td>Проверка в приложении + CHECK на длительность</td></tr>
+      <tr><td>Вместимость занятия ≤ вместимости зала</td><td>Проверка при создании занятия</td></tr>
+      <tr><td>Тренера ставим только на вид, который он ведёт</td><td>Проверка по trainer_workout_type</td></tr>
+      <tr><td>Отмена записи не позднее чем за 2 часа</td><td>Условие в процессе, опирается на workout.starts_at</td></tr>
+      <tr><td>Один клиент — одна запись на занятие</td><td>unique (workout_id, client_id)</td></tr>
+      <tr><td>Один слот персоналки — одна запись</td><td>unique (trainer_id, starts_at)</td></tr>
+      <tr><td>Тренера и клиента с историей нельзя удалять</td><td>ON DELETE RESTRICT + статус</td></tr>
+    </table></div>
+    <h4>Как проверить свою модель за пять минут</h4>
+    <ol>
+      <li>Возьмите каждое требование из блокнота и найдите на схеме место, где оно живёт. Не нашли — модель неполна.</li>
+      <li>Прогоните через модель события: покупка, вход, запись, неявка, отмена, увольнение, рост цен.</li>
+      <li>Для каждого «удалить» спросите: что станет с историей?</li>
+      <li>Для каждого «сколько» спросите: с какого момента считаем и что если задним числом?</li>
+      <li>Выпишите всё, что решили сами, в «Допущения». Записанное допущение ошибкой не считается, молчаливое — считается.</li>
+    </ol>
+  </div></details>
+</div>`;
+
+/* ================= views ================= */
+function vBrief(main){
+  main.appendChild(el(`<h2 class="stage-title">Этап 1 · У вас есть заказчик</h2>`));
+  main.appendChild(el(`<p class="stage-sub">Всё начинается с письма. Прочитайте его и посмотрите на «систему», которая работает в клубе сейчас.</p>`));
+  main.appendChild(el(`<div class="card letter">
+    <p><b>От:</b> Сергей, владелец сети фитнес-клубов «Форма»</p>
+    <p>«Здравствуйте! У нас три клуба, восемь тысяч клиентов — и весь учёт в Excel и WhatsApp. Администраторы вручную записывают на йогу, тренеры теряют записи на персоналки, на той неделе два человека купили один и тот же слот — скандал.</p>
+    <p>Хочу нормальный сервис: клиент сам покупает абонемент, записывается на занятия, проходит по QR через турникет. Мне сказали, что сначала нужен аналитик, который "всё опишет". Это вы?»</p>
+    <p class="sig">— Сергей, сеть «Форма»</p>
+  </div>`));
+  main.appendChild(el(`<div class="card sched">
+    <table>
+      <tr><th></th><th>Понедельник</th><th>Среда</th><th>Пятница</th></tr>
+      <tr><td><b>Утро</b></td><td><span class="cls">Йога · Аня · зал 2</span></td><td><span class="cls">Пилатес · Аня · зал 2</span></td><td><span class="cls">Йога · Марк · зал 2</span></td></tr>
+      <tr><td><b>Вечер</b></td><td><span class="cls full">Кроссфит · Олег · зал 1 · мест нет</span></td><td><span class="cls">Кроссфит · Марк · зал 1</span></td><td><span class="cls full">Стретчинг · Аня · зал 3 · мест нет</span></td></tr>
+    </table>
+    <div class="sched-cap">Фрагмент реального расписания из Excel
+      <i style="background:var(--accent-soft);border:1px solid var(--accent)"></i> есть места
+      <i style="background:var(--amber-soft);border:1px solid var(--amber)"></i> мест нет
+    </div>
+    <p class="hint">Присмотритесь к расписанию: тут уже спрятаны будущие вопросы для интервью. Кто ведёт занятия? Сколько мест? Что повторяется?</p>
+  </div>`));
+  main.appendChild(el(`<div class="card">
+    <h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Примеры: как аналитик читает такие письма</h3>
+    <p class="hint" style="margin:0 0 10px">Сначала прочитайте письмо и расписание сами и мысленно выпишите факты. Потом сверьтесь.</p>
+    <details class="spoil"><summary>Пример 1 — заметки аналитика по письму (нажмите, чтобы открыть)</summary><div class="sp-in">
+      «Три клуба» → система мультиклубная, клуб — сущность. «8000 клиентов» → объём, но не сущность. «Учёт в Excel и WhatsApp» → as-is, попросить показать. «Два человека купили один слот» → боль №1, запомнить дословно. «Покупает абонемент, записывается, проходит по QR» → три главных сценария будущего процесса.
+      <div class="sp-why">Приём: из письма выписываются существительные (кандидаты в сущности), числа (объёмы) и жалобы (боли). Эмоции («скандал») — маркер самой дорогой боли.</div></div></details>
+    <details class="spoil"><summary>Пример 2 — что аналитик видит в расписании</summary><div class="sp-in">
+      «Йога · Аня · зал 2» и «Йога · Марк · зал 2» → один вид ведут разные тренеры. «Аня» ведёт йогу, пилатес и стретчинг → тренер ведёт разные виды. Вместе → связь «многие-ко-многим». «Мест нет» → у занятия есть вместимость, значит нужна запись.
+      <div class="sp-why">Приём: артефакт «как есть» (расписание, тетрадь, Excel) почти всегда содержит будущую модель данных — её надо просто вычитать.</div></div></details>
+    <details class="spoil"><summary>Пример 3 — какие темы готовить к интервью</summary><div class="sp-in">
+      Из письма ясно не всё: сколько карт у человека? что за абонементы? что при неявке? кто платит? бывают ли возвраты? Это и есть заготовки вопросов — письмо даёт темы, интервью даёт ответы.
+      <div class="sp-why">Приём: после чтения брифа составьте список «чего я ещё НЕ знаю» — это план интервью.</div></div></details>
+  </div>`));
+  const b=el(`<button class="bigbtn" type="button">${S.started?"Кейс в работе — к интервью →":"Взять кейс в работу"}</button>`);
+  b.addEventListener("click",()=>{ S.started=true; save(); cur=1; renderAll(); window.scrollTo({top:0}) });
+  main.appendChild(b);
+}
+
+function vInterview(main){
+  main.appendChild(el(`<h2 class="stage-title">Этап 2 · Интервью: сначала — ваши вопросы</h2>`));
+  if(!S.ivDone){
+    main.appendChild(el(`<p class="stage-sub">В переговорке трое. Готовых вопросов не будет: сформулируйте свои — минимум ${MIN_Q}. Думайте, как аналитик: кардинальности («сколько X у одного Y?»), исключения («а что, если не…?»), время («до какого момента?»), деньги («кто платит? возвращаете?»), as-is («как вы это делаете сейчас?»). Когда зафиксируете вопросы, начнётся интервью — и вы сверите, что вскрыли, а что упустили.</p>`));
+    main.appendChild(el(`<div class="card">
+      <div class="person"><span class="roletag">Владелец</span><div class="pd"><b>Сергей.</b> Отвечает про деньги, клиентов, планы: типы абонементов, корпоративные продажи, возвраты.</div></div>
+      <div class="person"><span class="roletag">Администратор</span><div class="pd"><b>Лена.</b> Знает операционку: вход в зал, расписание, записи, отмены, заморозки, текущий Excel.</div></div>
+      <div class="person"><span class="roletag">Тренер</span><div class="pd"><b>Марк.</b> Расскажет про занятия, виды тренировок и персоналки.</div></div>
+    </div>`));
+    const qc=el(`<div class="card"><h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Ваши вопросы заказчику</h3>
+      <p class="hint" style="margin:0 0 10px">Записывайте по одному. Минимум ${MIN_Q}, лучше 10–12. Удалить можно до начала интервью.</p>
+      <div id="qlist"></div>
+      <div class="qadd"><input id="qinp" type="text" maxlength="200" placeholder="Например: сколько абонементов может быть у одного человека?"><button id="qbtn" type="button">Добавить</button></div>
+    </div>`);
+    const qlist=qc.querySelector("#qlist"), qinp=qc.querySelector("#qinp"), qbtn=qc.querySelector("#qbtn");
+    function drawQ(){
+      qlist.innerHTML="";
+      if(!S.myq.length) qlist.appendChild(el(`<p class="req-empty">Пока ни одного вопроса.</p>`));
+      S.myq.forEach((q,i)=>{
+        const row=el(`<div class="myq"><span class="n">${i+1}.</span><span>${esc(q)}</span><button class="del" type="button" aria-label="Удалить">✕</button></div>`);
+        row.querySelector(".del").addEventListener("click",()=>{S.myq.splice(i,1); save(); drawQ(); upd();});
+        qlist.appendChild(row);
+      });
+    }
+    function addQ(){
+      const v=qinp.value.trim();
+      if(!v) return;
+      S.myq.push(v); save(); qinp.value=""; drawQ(); upd(); qinp.focus();
+    }
+    qbtn.addEventListener("click",addQ);
+    qinp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addQ()}});
+    main.appendChild(qc);
+    main.appendChild(el(`<div class="card">
+      <h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Застряли? Примеры сильных вопросов</h3>
+      <p class="hint" style="margin:0 0 10px">Сначала выжмите максимум из своей головы. Каждый пример открывается отдельно — подглядывайте по одному и своими словами добавляйте в список.</p>
+      <details class="spoil"><summary>Пример 1 — про количество (нажмите, чтобы открыть)</summary><div class="sp-in">«Сколько абонементов может быть у одного человека?»<div class="sp-why">Вопрос о кардинальности: «сколько X у одного Y?» — задайте его про каждую пару понятий.</div></div></details>
+      <details class="spoil"><summary>Пример 2 — про исключения</summary><div class="sp-in">«Что происходит, если клиент записался на занятие и не пришёл?»<div class="sp-why">Вопросы «а что, если не…?» вытаскивают исключения — там прячется половина требований.</div></div></details>
+      <details class="spoil"><summary>Пример 3 — про «как сейчас»</summary><div class="sp-in">«Покажете, как вы ведёте учёт сейчас? Что чаще всего ломается?»<div class="sp-why">As-is артефакты (Excel, тетради) и боли — золото: система должна закрыть именно их.</div></div></details>
+      <details class="spoil"><summary>Пример 4 — про деньги</summary><div class="sp-in">«Кто платит за абонемент — всегда сам клиент? Можно ли его вернуть и на каких условиях?»<div class="sp-why">Плательщик и возвраты почти всегда меняют модель данных — и почти всегда забываются.</div></div></details>
+      <details class="spoil"><summary>Пример 5 — про изменения во времени</summary><div class="sp-in">«Что будет с уже проданными картами, когда вы поднимете цены?»<div class="sp-why">Вопрос об историчности: что фиксируется на момент сделки, а что живёт в справочнике.</div></div></details>
+      <details class="spoil"><summary>Пример 6 — про роли</summary><div class="sp-in">«Может ли один тренер вести разные виды занятий? А один вид — у разных тренеров?»<div class="sp-why">Кардинальность, проверенная с двух сторон, — так ловят связи «многие-ко-многим».</div></div></details>
+    </div>`));
+    const go=el(`<button class="bigbtn" type="button">Вопросы готовы — провести интервью</button>`);
+    function upd(){ go.disabled=S.myq.length<MIN_Q; go.textContent=S.myq.length<MIN_Q?`Вопросы готовы — провести интервью (ещё минимум ${MIN_Q-S.myq.length})`:"Вопросы готовы — провести интервью →" }
+    go.addEventListener("click",()=>{ if(S.myq.length<MIN_Q) return; S.ivDone=true; save(); renderAll(); window.scrollTo({top:0}) });
+    drawQ(); upd();
+    main.appendChild(go);
+    return;
+  }
+  /* after commit: reveal answers; student DERIVES the requirement, then self-checks */
+  main.appendChild(el(`<p class="stage-sub">Интервью прошло — заказчики рассказали о ${NT} ключевых темах. По каждой: прочитайте реплику и <b>сами решите, какое требование в ней спрятано</b> — готовых ответов не будет, пока не выберете. Потом честно отметьте, вскрыл ли эту тему хотя бы один из ваших вопросов.</p>`));
+  const grid=el(`<div class="iv-grid"></div>`);
+  const list=el(`<div></div>`);
+  const myqCard=el(`<details class="card" style="padding:12px 16px"><summary style="cursor:pointer; font-weight:600; font-size:14px">Ваши вопросы (${S.myq.length}) — развернуть</summary><div style="margin-top:10px"></div></details>`);
+  const myqBox=myqCard.querySelector("div");
+  S.myq.forEach((q,i)=>myqBox.appendChild(el(`<div class="myq myq-ro"><span class="n">${i+1}.</span><span>${esc(q)}</span></div>`)));
+  list.appendChild(myqCard);
+  TOPICS.forEach((tp,i)=>{
+    const der=S.ivDer[i];
+    const m=S.ivMark[i];
+    const card=el(`<div class="topic">
+      <div class="t-head"><span class="roletag">${tp.role}</span><span style="font-size:11px;color:var(--muted)">тема ${i+1} из ${NT}</span></div>
+      <div class="t-quote">«${tp.a}»</div>
+    </div>`);
+    if(der===undefined){
+      card.appendChild(el(`<div style="font-size:13.5px; font-weight:600; margin:10px 0 6px">Что из этого следует для системы?</div>`));
+      const optBox=el(`<div></div>`);
+      let sel=null;
+      const okBtn=el(`<button class="checkbtn" type="button" disabled style="margin-top:4px">Записать в требования</button>`);
+      tp.der.forEach((o,oi)=>{
+        const opt=el(`<label class="opt"><input type="radio" name="der${i}" value="${oi}"><span>${o}</span></label>`);
+        opt.querySelector("input").addEventListener("change",()=>{sel=oi; okBtn.disabled=false});
+        optBox.appendChild(opt);
+      });
+      okBtn.addEventListener("click",()=>{ if(sel===null) return; S.ivDer[i]=sel; save(); renderAll(); });
+      card.appendChild(optBox);
+      card.appendChild(okBtn);
+    } else {
+      const good=der===tp.derC;
+      const optBox=el(`<div></div>`);
+      tp.der.forEach((o,oi)=>{
+        const cls=oi===tp.derC?"is-ok":(oi===der?"is-err":"");
+        const mk=oi===tp.derC?`<span class="mark">✓</span>`:(oi===der?`<span class="mark">✗</span>`:"");
+        optBox.appendChild(el(`<div class="opt ${cls}" style="cursor:default"><span>${o}</span>${mk}</div>`));
+      });
+      card.appendChild(el(`<div style="font-size:12.5px; font-weight:600; margin:8px 0 4px; color:${good?"var(--ok)":"var(--err)"}">${good?"Верно — требование в блокноте.":"Не совсем — сравните с верным вариантом. Требование в блокнот записано."}</div>`));
+      card.appendChild(optBox);
+      card.appendChild(el(`<div class="t-req">📌 ${tp.req}</div>`));
+      card.appendChild(el(`<div class="t-ex">Сильный вопрос, который это вскрывает: ${tp.ex}.</div>`));
+      card.appendChild(el(`<div class="t-ex" style="margin-top:2px">А ваши вопросы дотянулись до этой темы?</div>`));
+      const mr=el(`<div class="markrow">
+        <button class="markbtn ${m===1?"on-ok":""}" type="button">✓ Мой вопрос это вскрыл</button>
+        <button class="markbtn ${m===0?"on-miss":""}" type="button">✗ Упустил — беру на заметку</button>
+      </div>`);
+      const [b1,b2]=mr.querySelectorAll(".markbtn");
+      b1.addEventListener("click",()=>{S.ivMark[i]=1; save(); renderAll()});
+      b2.addEventListener("click",()=>{S.ivMark[i]=0; save(); renderAll()});
+      card.appendChild(mr);
+    }
+    list.appendChild(card);
+  });
+  list.appendChild(el(`<div class="card weakcard"><h3>Вопросы, которые НЕ стоило тратить на интервью</h3><ul style="margin:0; padding-left:18px">
+    <li><b>«Какого цвета сделаем приложение?»</b> — UI решается на этапе дизайна, требований к модели и процессу не даёт.</li>
+    <li><b>«Какую CRM / какой фреймворк возьмём?»</b> — технологии выбирает разработка. Аналитик выясняет, ЧТО делает система, а не КАК она написана.</li>
+    <li><b>«Сколько протеина продаёт бар?»</b> — выход за рамки. Про границы спрашивают прямо: «входит ли в проект что-то, кроме абонементов и записи?»</li>
+  </ul></div>`));
+  grid.appendChild(list);
+  const nb=el(`<aside class="notebook card"><h3>Блокнот требований</h3>
+    <div class="nb-s">Разобрано ${ivDerDone()}/${NT} · выведено верно: ${ivDerOk()} · вскрыто вашими вопросами: ${ivHit()}</div><div id="nbl"></div></aside>`);
+  const nbl=nb.querySelector("#nbl");
+  if(!ivDerDone()) nbl.appendChild(el(`<p class="req-empty">Разбирайте темы — требования лягут сюда.</p>`));
+  TOPICS.forEach((tp,i)=>{
+    if(S.ivDer[i]===undefined) return;
+    nbl.appendChild(el(`<div class="req ${S.ivMark[i]===0?"miss":""}">${tp.req}</div>`));
+  });
+  grid.appendChild(nb);
+  main.appendChild(grid);
+  if(ivComplete()){
+    const b=el(`<button class="bigbtn" type="button" style="margin-top:14px">Требования собраны — к разбору →</button>`);
+    b.addEventListener("click",()=>{cur=2; renderAll(); window.scrollTo({top:0})});
+    main.appendChild(b);
+  }
+}
+
+function vHandout(main){
+  main.appendChild(el(`<h2 class="stage-title">Этап 3 · Требования: памятка аналитика</h2>`));
+  main.appendChild(el(`<p class="stage-sub">Интервью закончилось. Теперь — сподручный материал: каждая фраза заказчика содержит слово-маркер, которое подсказывает конструкцию в модели или процессе. Памятка построена из ВАШЕГО блокнота. Изучите её и закрепите двумя заданиями.</p>`));
+  main.appendChild(el(`<div class="card handout hscroll">
+    <h3>Памятка: маркер в речи → конструкция аналитика</h3>
+    <table>
+      <tr><th>Заказчик сказал</th><th>Маркер</th><th>Конструкция</th></tr>
+      <tr><td>«Действующая карта одна, но нужна вся история»</td><td class="mk">история</td><td>Одна таблица со статусами и датами; «один активный» — ограничение</td></tr>
+      <tr><td>«Условия карты — те, что были при покупке»</td><td class="mk">на момент сделки</td><td>Снапшот цены/условий в абонементе, справочник — отдельно</td></tr>
+      <tr><td>«Я веду йогу и стретчинг, кроссфит ведут трое»</td><td class="mk">несколько ↔ несколько</td><td>M:N → связующая таблица</td></tr>
+      <tr><td>«Отменить — не позднее чем за 2 часа»</td><td class="mk">не позднее чем</td><td>XOR по времени в процессе</td></tr>
+      <tr><td>«После трёх неявок — блокировка на неделю»</td><td class="mk">после N раз / на срок</td><td>История неявок в данных + таймер в процессе</td></tr>
+      <tr><td>«Заморозка кусками от 7 дней, до 30 в году»</td><td class="mk">периоды</td><td>Сущность «период заморозки» с датами</td></tr>
+      <tr><td>«Дважды продали один слот»</td><td class="mk">боль as-is</td><td>Уникальное ограничение — конфликт невозможен физически</td></tr>
+      <tr><td>«Каждый вход фиксируем»</td><td class="mk">каждый факт</td><td>Сущность-журнал «посещение»</td></tr>
+      <tr><td>«Система сама шлёт напоминание за сутки»</td><td class="mk">система сама, по времени</td><td>Событие-таймер без актора-человека</td></tr>
+      <tr><td>«Компания платит за сотрудников»</td><td class="mk">кто платит</td><td>Сущность «компания», необязательная связь-плательщик</td></tr>
+      <tr><td>«Полный возврат — если не было посещений»</td><td class="mk">условие по фактам</td><td>Правило опирается на журнал: без данных его не реализовать</td></tr>
+    </table>
+    <p class="hint">Сохраните приём: на любом интервью слушайте маркеры, а не только слова. Требование без маркера — повод задать уточняющий вопрос.</p>
+  </div>`));
+  main.appendChild(el(`<div class="card">
+    <h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Примеры: как записывать требования</h3>
+    <details class="spoil"><summary>Пример 1 — формула хорошего требования (нажмите, чтобы открыть)</summary><div class="sp-in">
+      Плохо: «Нужна заморозка». Хорошо: «Клиент с безлимитным абонементом может заморозить его на период от 7 дней, суммарно не более 30 дней в году; срок действия карты продлевается на дни заморозки».
+      <div class="sp-why">Формула: кто + что может + при каких условиях + что происходит в системе. Числа из речи заказчика (7, 30) — всегда в текст требования.</div></div></details>
+    <details class="spoil"><summary>Пример 2 — разбор одной фразы от и до</summary><div class="sp-in">
+      Фраза: «Отменить можно не позднее чем за 2 часа, после трёх неявок блокируем на неделю». Разбор: (1) маркер «не позднее чем» → условие по времени в процессе отмены; (2) «неявка» → новый статус записи, значит статусы надо хранить; (3) «после трёх» → счётчик, значит нужна история неявок в данных; (4) «на неделю» → таймер снятия блокировки. Одна фраза — четыре элемента будущей системы.
+      <div class="sp-why">Приём: тяните за каждое слово. Если из фразы вышло только одно требование — скорее всего, что-то потеряли.</div></div></details>
+    <details class="spoil"><summary>Пример 3 — требование, которого НЕ было в словах заказчика</summary><div class="sp-in">
+      Заказчик не говорил «нужна таблица посещений с привязкой к абонементу». Но он сказал «возврат пропорционально использованному» — и это требование нельзя реализовать без такой таблицы. Аналитик записывает: «Для расчёта возврата система хранит посещения с привязкой к конкретному абонементу» — и помечает: выведено из правила возврата.
+      <div class="sp-why">Приём: у каждого правила спрашивайте «а какие данные нужны, чтобы его посчитать?» Недостающие данные — тоже требования.</div></div></details>
+  </div>`));
+  H_TASKS.forEach((t,i)=>main.appendChild(renderTask(t,i,H_TASKS.length)));
+  if(stageScore(H_TASKS).done===H_TASKS.length){
+    const b=el(`<button class="bigbtn" type="button">Памятка усвоена — к пути клиента →</button>`);
+    b.addEventListener("click",()=>{cur=3; renderAll(); window.scrollTo({top:0})});
+    main.appendChild(b);
+  }
+}
+
+function vTasksStage(main, title, sub, tasks, nextLabel, nextIdx, extraHTML){
+  main.appendChild(el(`<h2 class="stage-title">${title}</h2>`));
+  main.appendChild(el(`<p class="stage-sub">${sub}</p>`));
+  if(extraHTML) main.appendChild(el(extraHTML));
+  tasks.forEach((t,i)=>main.appendChild(renderTask(t,i,tasks.length)));
+  const sc=stageScore(tasks);
+  if(sc.done===sc.total){
+    main.appendChild(el(`<div class="verdict"><h3>Этап пройден: ${sc.ok} из ${sc.total}</h3><p>${sc.ok===sc.total?"Чисто!":"Перечитайте разборы — эти же ловушки ждут в полном кейсе на защите."}</p></div>`));
+    const b=el(`<button class="bigbtn" type="button">${nextLabel}</button>`);
+    b.addEventListener("click",()=>{cur=nextIdx; renderAll(); window.scrollTo({top:0})});
+    main.appendChild(b);
+  }
+}
+
+function vFinal(main){
+  main.appendChild(el(`<h2 class="stage-title">Этап 6 · Реализация: передаём проект разработке</h2>`));
+  main.appendChild(el(`<div class="pathmap">
+    <div class="pm"><b>Заказчик</b><span>письмо, боль</span></div>
+    <div class="pm"><b>Интервью</b><span>${NT} требований</span></div>
+    <div class="pm"><b>Требования</b><span>маркеры → конструкции</span></div>
+    <div class="pm"><b>Процесс</b><span>BPMN: путь клиента</span></div>
+    <div class="pm"><b>Данные</b><span>ERD: сущности, связи</span></div>
+    <div class="pm here"><b>Реализация</b><span>вы здесь</span></div>
+  </div>`));
+  const h=stageScore(H_TASKS), j=stageScore(J_TASKS), e=stageScore(E_TASKS);
+  main.appendChild(el(`<div class="sum-grid">
+    <div class="sum-card"><h3>Требования выведены</h3><div class="sc-n">${ivDerOk()}<small> / ${NT} верно</small></div></div>
+    <div class="sum-card"><h3>Вопросы (самооценка)</h3><div class="sc-n">${ivHit()}<small> / ${NT} тем вскрыто</small></div></div>
+    <div class="sum-card"><h3>Памятка</h3><div class="sc-n">${h.ok}<small> / ${h.total} верно</small></div></div>
+    <div class="sum-card"><h3>Процесс</h3><div class="sc-n">${j.ok}<small> / ${j.total} верно</small></div></div>
+    <div class="sum-card"><h3>ERD</h3><div class="sc-n">${e.ok}<small> / ${e.total} верно</small></div></div>
+  </div>`));
+  const okAll=ivDerOk()+h.ok+j.ok+e.ok, totAll=NT+h.total+j.total+e.total, pct=Math.round(100*okAll/totAll);
+  main.appendChild(el(`<div class="verdict"><h3>${pct>=85?"Заказчик подписал постановку":pct>=60?"Постановка принята с замечаниями":"Сергей просит доработать"} — ${pct}%</h3>
+  <p>${pct>=85?"Отличная работа аналитика: требования вытянуты вопросами, каждое решение обосновано. Разработка может стартовать.":pct>=60?"Основа есть. Вернитесь к разборам неверных шагов, прежде чем сдавать полные диаграммы.":"Пройдите разборы ошибок и повторите кейс — кнопка сброса ниже."}</p></div>`));
+  main.appendChild(el(`<div class="card"><h3 style="margin:0 0 8px; font-family:Georgia,serif; font-weight:400">Что получает разработка от аналитика</h3>
+  <ol class="deliver">
+    <li><b>ERD</b> → схема БД и миграции. Постройте её полностью в dbdiagram.io: все сущности этапа 5, снапшот условий в абонементе, компания-плательщик, уникальность слота, история неявок. Сдайте DSL-код + картинку.</li>
+    <li><b>BPMN</b> → бэклог и логика бэкенда. Постройте в bpmn.io: покупка абонемента, запись с отменой «за 2 часа», неявки с блокировкой, напоминание-таймер, возврат по двум условиям. Клиент — отдельный пул, каждый финал со смыслом.</li>
+    <li><b>Допущения</b> → вопросы заказчику на следующую встречу. Всё, что вы решили сами (сгорают ли посещения пакета? передаётся ли карта другому человеку?), — отдельным списком.</li>
+  </ol>
+  <p class="hint">Формат сдачи — как в практикуме: папка Фамилия_Фитнес с исходниками диаграмм, картинками и answers.md. Свои вопросы с этапа 2 приложите туда же — преподаватель разберёт их отдельно.</p></div>`));
+  main.appendChild(el(`<div class="card">
+    <h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Примеры: как выглядит хорошая сдача</h3>
+    <details class="spoil"><summary>Пример 1 — структура папки (нажмите, чтобы открыть)</summary><div class="sp-in">
+      <pre class="codeblock" style="margin:8px 0">Иванов_Фитнес/
+├── erd.dbml          — исходник модели данных
+├── erd.png           — картинка из dbdiagram.io
+├── process.bpmn      — исходник процесса
+├── process.png       — картинка из bpmn.io
+├── questions.md      — мои вопросы с этапа интервью
+└── answers.md        — допущения + ответы на вопросы защиты</pre>
+      <div class="sp-why">Код диаграмм обязателен: проверяется корректность, а не «красота» картинки.</div></div></details>
+    <details class="spoil"><summary>Пример 2 — фрагмент answers.md с допущениями</summary><div class="sp-in">
+      <pre class="codeblock" style="margin:8px 0">## Допущения
+1. Посещения пакетного абонемента не сгорают по сроку —
+   в интервью не обсуждалось. Принял: не сгорают.
+2. Карту нельзя передать другому человеку. Принял по аналогии
+   с обычной практикой клубов, требует подтверждения заказчиком.
+3. Слот персональной тренировки — 60 минут. Уточнить у тренеров.</pre>
+      <div class="sp-why">Каждое допущение: что решил + почему + что уточнить у заказчика. Записанное допущение — не ошибка; молчаливое — ошибка.</div></div></details>
+    <details class="spoil"><summary>Пример 3 — как разработчик прочитает вашу ERD</summary><div class="sp-in">
+      Разработчик возьмёт erd.dbml и превратит каждую таблицу в миграцию БД, каждый [ref] — во внешний ключ, каждый unique-индекс — в ограничение. Если в модели нет таблицы записей — в системе физически негде будет хранить неявки, и требование «блокировка после трёх» умрёт молча. Поэтому диаграмма — не картинка для отчёта, а контракт с разработкой.
+      <div class="sp-why">Проверка перед сдачей: пройдитесь по каждому требованию из блокнота и найдите, ГДЕ в диаграммах оно живёт.</div></div></details>
+  </div>`));
+  main.appendChild(el(REF_HTML));
+  const reset=el(`<button class="danger" type="button">Сбросить кейс и пройти заново</button>`);
+  reset.addEventListener("click",resetCase);
+  main.appendChild(reset);
+}
+/* confirm() недоступен в песочнице артефакта — подтверждение двумя кликами */
+function resetCase(ev){
+  const b=ev&&ev.currentTarget?ev.currentTarget:null;
+  if(b&&!b.dataset.armed){
+    b.dataset.armed="1";
+    b.dataset.orig=b.textContent;
+    b.textContent="Точно сбросить всё? Нажмите ещё раз";
+    setTimeout(()=>{ if(b.dataset.armed){ delete b.dataset.armed; b.textContent=b.dataset.orig||"⟲ Начать с нуля"; } },4000);
+    return;
+  }
+  S={started:false, myq:[], ivDone:false, ivMark:{}, ivDer:{}, ans:{}}; save(); cur=0; renderAll(); window.scrollTo({top:0});
+}
+
+/* ================= render ================= */
+function renderStepper(){
+  const st=document.getElementById("stepper"); st.innerHTML="";
+  STAGES.forEach((sg,i)=>{
+    const un=unlocked(i);
+    const done=i<5&&unlocked(i+1);
+    const b=el(`<button class="step ${cur===i?"act":""} ${un?"":"locked"} ${done?"done":""}" type="button" ${un?"":"disabled"}>
+      <span class="st-n">${sg.n}</span><span class="st-t">${un?"":"🔒 "}${sg.t}</span><span class="st-s">${un?sg.s():"откроется позже"}</span></button>`);
+    if(un) b.addEventListener("click",()=>{cur=i; renderAll(); window.scrollTo({top:0})});
+    st.appendChild(b);
+  });
+}
+function renderAll(){
+  if(!unlocked(cur)) cur=0;
+  renderStepper();
+  const main=document.getElementById("main"); main.innerHTML="";
+  if(cur===0) vBrief(main);
+  if(cur===1) vInterview(main);
+  if(cur===2) vHandout(main);
+  if(cur===3) vTasksStage(main,"Этап 4 · Процесс: путь клиента","Прежде чем рисовать BPMN, аналитик выстраивает путь клиента и находит точки, где процесс ветвится. Соберите путь и примите семь решений — все они выросли из требований вашего блокнота. К сложным заданиям есть наводящие подсказки: сначала думайте сами, подсказка — запасной парашют.",J_TASKS,"Путь ясен — к модели данных →",4,
+  `<div class="card">
+    <h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Примеры: разобранные задачи из другого кейса (кинотеатр)</h3>
+    <p class="hint" style="margin:0 0 10px">Тот же приём — другой домен, чтобы не подсказывать ответы напрямую. Открывайте по одному.</p>
+    <details class="spoil"><summary>Пример 1 — «бронь мест держится 15 минут» (нажмите, чтобы открыть)</summary><div class="sp-in">
+      Требование кинотеатра: «выбранные места держатся 15 минут, не оплатил — снова в продаже». Решение: после «Места выбраны» — ожидание с событийным шлюзом: что раньше — «Оплата поступила» или таймер 15 минут. По таймеру: задача «Снять бронь», финал «Бронь аннулирована». Ошибкой была бы задача «Ждать 15 минут»: ждать — не работа.
+      <div class="sp-why">Перенос на фитнес: найдите свои «по времени само» — и ставьте таймер, а не задачу.</div></div></details>
+    <details class="spoil"><summary>Пример 2 — «возврат билета до начала сеанса»</summary><div class="sp-in">
+      Решение: отдельный сценарий со стартом «Запрос возврата поступил» → XOR «сеанс ещё не начался?» → [да] «Вернуть деньги», «Вернуть место в продажу», финал «Возврат выполнен»; [нет] финал «Отказано: сеанс начался». Два осмысленных финала, условия подписаны на стрелках.
+      <div class="sp-why">Перенос: у каждой ветки — свой финал со смыслом; «Конец» без имени не говорит читателю ничего.</div></div></details>
+    <details class="spoil"><summary>Пример 3 — «кассир и покупатель на одной схеме»</summary><div class="sp-in">
+      Покупатель — отдельный пул: кинотеатр не управляет его действиями. Внутри пула кинотеатра — дорожки «Касса» и «Зал». Между пулами — пунктирные потоки сообщений («заявка на возврат», «билет»). Sequence flow через границу пула — ошибка, которую валидатор bpmn.io даже не даст сохранить.
+      <div class="sp-why">Перенос: спросите про каждого участника — «может ли система назначить ему задачу?» Нет — отдельный пул.</div></div></details>
+  </div>`);
+  if(cur===4) vTasksStage(main,"Этап 5 · Данные: проектируем ERD","Требования из блокнота превращаются в сущности, связи и ограничения. Десять шагов — от списка сущностей до различения справочников и экземпляров.",E_TASKS,"Модель готова — к передаче в разработку →",5,
+  `<div class="card">
+    <h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Примеры: готовые фрагменты ERD из другого кейса (кинотеатр)</h3>
+    <p class="hint" style="margin:0 0 10px">Смотрите на приёмы — и переносите их на фитнес-клуб.</p>
+    <details class="spoil"><summary>Пример 1 — снапшот цены в билете (нажмите, чтобы открыть)</summary><div class="sp-in">
+      <pre class="codeblock" style="margin:8px 0">Table ticket {
+  id int [pk]
+  session_id int [ref: &gt; session.id]
+  seat_id int [ref: &gt; seat.id]
+  price decimal  // зафиксирована при покупке
+  status varchar // sold / returned / used
+}</pre>
+      Цена лежит и в прайсе (актуальная), и в билете (на момент покупки). Смена прайса не трогает проданные билеты.
+      <div class="sp-why">Перенос: что в фитнес-клубе «живёт по условиям на момент покупки»?</div></div></details>
+    <details class="spoil"><summary>Пример 2 — разрешение M:N «фильм — жанр»</summary><div class="sp-in">
+      <pre class="codeblock" style="margin:8px 0">Table movie_genre {
+  id int [pk]
+  movie_id int [ref: &gt; movie.id]
+  genre_id int [ref: &gt; genre.id]
+}</pre>
+      У фильма много жанров, у жанра много фильмов — связующая таблица с двумя FK превращает M:N в две связи 1:N.
+      <div class="sp-why">Перенос: какая пара в фитнес-клубе «многие ко многим»? (Вы её выводили на интервью.)</div></div></details>
+    <details class="spoil"><summary>Пример 3 — защита от двойной продажи кресла</summary><div class="sp-in">
+      <pre class="codeblock" style="margin:8px 0">Table ticket {
+  ...
+  indexes {
+    (session_id, seat_id) [unique] // одно кресло — один билет на сеанс
+  }
+}</pre>
+      Уникальный индекс делает двойную продажу физически невозможной: вторая вставка просто упадёт с ошибкой, и приложение покажет «место уже занято».
+      <div class="sp-why">Перенос: какая пара полей должна быть уникальной, чтобы закрыть боль из WhatsApp тренеров?</div></div></details>
+    <details class="spoil"><summary>Пример 4 — справочник и экземпляр рядом</summary><div class="sp-in">
+      <pre class="codeblock" style="margin:8px 0">Table movie {   // справочник: что бывает
+  id int [pk]
+  title varchar
+}
+Table session { // экземпляр: что случится в четверг в 19:00
+  id int [pk]
+  movie_id int [ref: &gt; movie.id]
+  hall_id int [ref: &gt; hall.id]
+  starts_at datetime
+}</pre>
+      Фильм существует без даты; сеанс — это фильм, привязанный к залу и времени.
+      <div class="sp-why">Перенос: найдите такие же пары в фитнес-клубе — их две.</div></div></details>
+  </div>`);
+  if(cur===5) vFinal(main);
+}
+document.getElementById("resetall").addEventListener("click",resetCase);
+for(let i=5;i>=0;i--){ if(unlocked(i)){cur=i;break} }
+renderAll();
+</script>
 </body>
 </html>

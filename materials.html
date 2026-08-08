@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Практикум системного аналитика — материалы для учеников</title>
+<style>
+:root{
+  --bg:#F6F7F9; --surface:#FFFFFF; --surface2:#F1F3F7;
+  --ink:#1B2230; --muted:#5B6577; --line:#E2E6ED;
+  --accent:#2C4FC7; --accent-ink:#FFFFFF; --accent-soft:#EDF1FD;
+  --green:#147A5E; --green-soft:#E6F2ED;
+  --shadow:0 1px 3px rgba(27,34,48,.07);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#131722; --surface:#1B2130; --surface2:#20273A;
+    --ink:#E9EDF5; --muted:#9AA4B8; --line:#2A3244;
+    --accent:#8AA2F5; --accent-ink:#10162B; --accent-soft:#232C48;
+    --green:#4CC9A4; --green-soft:#1E332B;
+    --shadow:0 1px 3px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--bg); color:var(--ink); font:16px/1.6 "Segoe UI",-apple-system,system-ui,Roboto,sans-serif}
+.wrap{max-width:820px; margin:0 auto; padding:44px 24px 80px}
+.eyebrow{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:6px}
+h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:34px; line-height:1.2; margin-bottom:10px; text-wrap:balance}
+.lead{color:var(--muted); font-size:16px; max-width:62ch; margin-bottom:34px}
+h2{font-family:Georgia,serif; font-weight:400; font-size:22px; margin:36px 0 14px}
+.cards{display:grid; gap:14px}
+a.card{
+  display:block; text-decoration:none; color:inherit; border:1px solid var(--line);
+  border-left:4px solid var(--accent); border-radius:12px; background:var(--surface);
+  padding:18px 20px; box-shadow:var(--shadow);
+}
+a.card:hover{border-color:var(--accent); transform:translateY(-1px)}
+a.card:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+a.card.green{border-left-color:var(--green)}
+a.card h3{font-size:18px; margin-bottom:4px}
+a.card p{color:var(--muted); font-size:14px; max-width:60ch}
+a.card .go{display:inline-block; margin-top:10px; font-size:13px; font-weight:600; color:var(--accent)}
+a.card.green .go{color:var(--green)}
+.badge{display:inline-block; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+  background:var(--accent-soft); color:var(--accent); border-radius:20px; padding:3px 10px; margin-bottom:8px}
+.badge.green{background:var(--green-soft); color:var(--green)}
+ul.files{list-style:none; display:grid; gap:8px}
+ul.files li{border:1px solid var(--line); border-radius:9px; background:var(--surface); padding:10px 14px}
+ul.files a{color:var(--ink); text-decoration:none; font-size:14.5px}
+ul.files a:hover{color:var(--accent); text-decoration:underline}
+ul.files span{color:var(--muted); font-size:13px}
+.note{border:1px solid var(--line); border-radius:10px; background:var(--surface2); padding:14px 18px; font-size:14px; color:var(--muted); margin-top:30px}
+table{border-collapse:collapse; width:100%; font-size:14px; margin-top:8px}
+th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:6px 8px; border-bottom:1px solid var(--line)}
+td{padding:7px 8px; border-bottom:1px solid var(--line)}
+td a{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important; transform:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Материалы для участников</p>
+  <h1>Практикум системного аналитика: ERD, BPMN, UML, DFD</h1>
+  <p class="lead">Всё, что нужно для занятия: интерактивный тренажёр нотаций, кейс-квест «от заказчика до реализации» и текстовые кейсы для самостоятельной работы. Прогресс в интерактивных материалах сохраняется в вашем браузере.</p>
+
+  <h2>Интерактивные материалы</h2>
+  <div class="cards">
+    <a class="card green" href="index.html">
+      <span class="badge green">Кейс-квест · 6 этапов</span>
+      <h3>Спроектируем сервис фитнес-клуба</h3>
+      <p>Полный путь аналитика: письмо заказчика → вы сами формулируете вопросы для интервью → выводите требования → собираете путь клиента (BPMN) → проектируете модель данных (ERD) → передаёте проект разработке. На каждом этапе есть примеры и наводящие подсказки.</p>
+      <span class="go">Начать кейс →</span>
+    </a>
+    <a class="card" href="trainer.html">
+      <span class="badge">Тренажёр · 84 задания</span>
+      <h3>Тренажёр нотаций: ERD · BPMN · UML · DFD</h3>
+      <p>Теория и практика по четырём нотациям: шпаргалки, поиск ошибок в диаграммах и коде, задания «какая диаграмма нужна», мини-кейсы и сквозной кейс. Мгновенная проверка с разбором каждого ответа.</p>
+      <span class="go">Открыть тренажёр →</span>
+    </a>
+    <a class="card green" href="erd-explained.html">
+      <span class="badge green">Разбор · готовые диаграммы</span>
+      <h3>ERD и BPMN фитнес-клуба: что куда, как и почему</h3>
+      <p>Эталонное решение кейса с объяснением каждого шага: схемы связей, полный код модели, три процесса BPMN — и семь ситуаций из жизни клуба (увольнение тренера, рост цен, отмена занятия) с наглядным ответом, что меняется в базе данных.</p>
+      <span class="go">Открыть разбор →</span>
+    </a>
+  </div>
+
+  <h2>Кейсы для самостоятельной работы</h2>
+  <table>
+    <tr><th>Кейс</th><th>Нотация</th></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/00_Инструкция.md">00. Инструкция участника</a></td><td>правила, формат сдачи</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/01_ERD_Онлайн-школа.md">01. Онлайн-школа</a></td><td>ERD</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/02_ERD_Каршеринг.md">02. Каршеринг</a></td><td>ERD</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/03_BPMN_Возврат_товара.md">03. Возврат товара</a></td><td>BPMN</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/04_BPMN_Пропуск_в_бизнес-центр.md">04. Пропуск в бизнес-центр</a></td><td>BPMN, пулы</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/05_UML_UseCase_Фитнес-клуб.md">05. Фитнес-клуб</a></td><td>UML Use Case</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/06_UML_Activity_Публикация_статьи.md">06. Публикация статьи</a></td><td>UML Activity</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/07_UML_Sequence_Оплата_заказа.md">07. Оплата заказа</a></td><td>UML Sequence</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/08_DFD_Личный_кабинет_ЖКХ.md">08. Личный кабинет ЖКХ</a></td><td>DFD</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/09_Комплексный_кейс_Доставка_еды.md">09. Доставка еды (командный)</a></td><td>все нотации</td></tr>
+    <tr><td><a href="https://github.com/AndreyPol1991/sa-praktikum/blob/main/student/99_Чеклист_самопроверки.md">99. Чек-лист самопроверки</a></td><td>перед сдачей</td></tr>
+  </table>
+
+  <div class="note">
+    <b>Инструменты:</b> ERD — <a href="https://dbdiagram.io">dbdiagram.io</a>, BPMN — <a href="https://bpmn.io">bpmn.io</a>, UML — <a href="https://plantuml.com">PlantUML</a> или <a href="https://draw.io">draw.io</a>.
+    Каждый кейс сдаётся как картинка диаграммы <b>плюс исходный код</b> и ответы на вопросы: проверяется корректность, а не красота.
+  </div>
+</div>
+</body>
+</html>
