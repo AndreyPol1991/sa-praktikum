@@ -861,7 +861,244 @@ Table personal_slot {
 }</pre>
   </div></details>
 
-  <details class="spoil"><summary>6. BPMN: три готовые схемы процессов</summary><div class="sp-in">
+  <details class="spoil"><summary>6. Как эта модель строилась: 11 шагов на нашем кейсе</summary><div class="sp-in">
+    <p>Тот же метод, что был перед заданиями, но теперь применённый к фитнес-клубу от начала до конца.</p>
+    <div class="tblwrap"><table>
+      <tr><th>Шаг</th><th>Что сделали на нашем кейсе</th></tr>
+      <tr><td>0. Требования</td><td>12 требований с интервью — от «сколько карт у человека» до боли «два клиента купили один слот»</td></tr>
+      <tr><td>1. Существительные</td><td>клиент, компания, абонемент, тип, цена, посещение, турникет, QR, занятие, вид, тренер, зал, запись, неявка, заморозка, пакет, слот</td></tr>
+      <tr><td>2. Отсев</td><td>Убрали: QR и цену (атрибуты), «2 часа» и «30 дней» (правила), турникет (железо), неявку (статус записи)</td></tr>
+      <tr><td>3. Справочники / экземпляры</td><td>Справочники: membership_type, workout_type, hall, trainer, client. Экземпляры: membership, workout, visit, booking, freeze_period, personal_slot</td></tr>
+      <tr><td>4. Атрибуты и ключи</td><td>У всех суррогатный id; FK по правилу таблица_id</td></tr>
+      <tr><td>5. Кардинальности</td><td>Почти всё 1:N. «Активная карта одна» осталась правилом, а не связью 1:1</td></tr>
+      <tr><td>6. Разрешение M:N</td><td>Единственная M:N — тренер ↔ вид занятия — превратилась в trainer_workout_type</td></tr>
+      <tr><td>7. Историчность</td><td>Маркер «карта живёт по условиям покупки» → поля-снимки price, visit_limit, time_limit_to в membership</td></tr>
+      <tr><td>8. Журналы</td><td>«Каждый вход фиксируем» → visit. «Нужны неявки» → booking со статусом</td></tr>
+      <tr><td>9. Ограничения</td><td>unique на слот и на запись, частичный unique на активную карту, RESTRICT на тренера</td></tr>
+      <tr><td>10. Прогон событий</td><td>Увольнение, рост цен, третья неявка, отмена занятия, переименование, удаление ПДн — всё выразимо</td></tr>
+      <tr><td>11. Допущения</td><td>Сгорают ли визиты пакета, передаётся ли карта, длительность слота, судьба занятий уволенного</td></tr>
+    </table></div>
+  </div></details>
+
+  <details class="spoil"><summary>7. Из фразы заказчика в таблицу: три сквозных примера</summary><div class="sp-in">
+    <p>Здесь видно всю цепочку превращения: что сказал человек — что записал аналитик — что появилось в базе — что с этим делает разработчик.</p>
+
+    <h4>Пример 1. «Я веду йогу и стретчинг, а кроссфит ведут трое»</h4>
+    <ol>
+      <li><b>Требование:</b> тренер ведёт несколько видов, вид ведут несколько тренеров.</li>
+      <li><b>Решение аналитика:</b> «много» с обеих сторон — это M:N, значит нужна связующая таблица.</li>
+      <li><b>В базе появляется:</b></li>
+    </ol>
+<pre>CREATE TABLE trainer_workout_type (
+  id              serial PRIMARY KEY,
+  trainer_id      int NOT NULL REFERENCES trainer(id),
+  workout_type_id int NOT NULL REFERENCES workout_type(id),
+  UNIQUE (trainer_id, workout_type_id)
+);
+
+-- строки таблицы читаются как факты:
+-- (Аня, йога), (Аня, стретчинг), (Марк, кроссфит), (Олег, кроссфит)</pre>
+    <p><b>Что это даёт разработке.</b> Появляется простой запрос «кто может вести кроссфит» — обычный JOIN. При выборе тренера в форме создания занятия выпадающий список фильтруется по этой таблице, и администратор физически не поставит Аню на кроссфит. Без связующей таблицы обе задачи нерешаемы.</p>
+
+    <h4>Пример 2. «Цены меняем, но купленная карта живёт по старым условиям»</h4>
+    <ol>
+      <li><b>Требование:</b> условия фиксируются на момент покупки.</li>
+      <li><b>Решение аналитика:</b> маркер «даже если потом изменили» — нужен снимок значений в самой карте.</li>
+      <li><b>В базе появляется:</b></li>
+    </ol>
+<pre>CREATE TABLE membership (
+  id                  serial PRIMARY KEY,
+  client_id           int NOT NULL REFERENCES client(id),
+  membership_type_id  int NOT NULL REFERENCES membership_type(id),
+  price               numeric(10,2) NOT NULL,  -- СНИМОК на момент покупки
+  visit_limit         int,                     -- снимок условий
+  starts_on           date NOT NULL,
+  ends_on             date NOT NULL,
+  status              varchar(16) NOT NULL
+);</pre>
+    <p><b>Что это даёт разработке.</b> Код продажи копирует значения из справочника в карту один раз — и дальше расчёт возврата, чек и отчёт по выручке берут цену из карты. Разработчику не нужно хранить историю изменений прайса и вычислять, какая цена действовала в мае: ответ уже лежит в строке. Без снимка пришлось бы делать отдельную таблицу версий тарифа — дороже и легче ошибиться.</p>
+
+    <h4>Пример 3. «Два клиента купили один и тот же слот — скандал»</h4>
+    <ol>
+      <li><b>Требование (боль as-is):</b> двойная продажа слота недопустима.</li>
+      <li><b>Решение аналитика:</b> проверка в интерфейсе проигрывает гонке — нужна гарантия на уровне данных.</li>
+      <li><b>В базе появляется:</b></li>
+    </ol>
+<pre>ALTER TABLE personal_slot
+  ADD CONSTRAINT uq_slot UNIQUE (trainer_id, starts_at);
+
+-- вторая параллельная вставка на то же время падает:
+-- ERROR: duplicate key value violates unique constraint "uq_slot"</pre>
+    <p><b>Что это даёт разработке.</b> Разработчик не пишет сложную логику блокировок: он ловит ошибку уникальности и показывает пользователю «слот уже занят». Гарантия при этом даёт база, а не аккуратность кода — значит, ошибка невозможна даже при двух серверах приложения и одновременных запросах.</p>
+  </div></details>
+
+  <details class="spoil"><summary>8. Зачем это разработке: что делают с вашей диаграммой</summary><div class="sp-in">
+    <p>Аналитику важно понимать, что диаграмма — не картинка для отчёта, а вход в работу нескольких человек.</p>
+    <div class="tblwrap"><table>
+      <tr><th>Кто</th><th>Что берёт из ERD</th><th>Что сломается, если модель неверна</th></tr>
+      <tr><td>Разработчик бэкенда</td><td>Таблицы, поля и типы → миграции БД</td><td>Придётся менять схему на живой базе, когда данные уже накопились</td></tr>
+      <tr><td>Разработчик API</td><td>Сущности и связи → структура ответов, вложенность</td><td>Мобильное приложение получит данные, которые нельзя показать на экране</td></tr>
+      <tr><td>Тестировщик</td><td>Ограничения → негативные тесты</td><td>Не проверит, что двойная запись невозможна, — баг уедет в продакшн</td></tr>
+      <tr><td>Аналитик отчётности</td><td>Журналы фактов → выручка, загрузка, неявки</td><td>Не будет данных под метрику: посчитать задним числом невозможно</td></tr>
+      <tr><td>Заказчик</td><td>Понятные имена сущностей</td><td>Обсуждение превращается в спор о терминах</td></tr>
+    </table></div>
+    <p class="hint">Главный вывод для ученика: <b>всё, что не попало в модель, в системе не появится</b>. Требование, под которое не завели данные, тихо умирает — его просто нечем реализовать.</p>
+  </div></details>
+
+  <details class="spoil"><summary>9. Та же модель в PlantUML</summary><div class="sp-in">
+    <p>Если вы работаете в PlantUML, а не в dbdiagram.io — вот та же модель. Вставьте код на <a href="https://plantuml.com/ru/" style="color:var(--accent)">plantuml.com</a> или в плагин IDE.</p>
+<pre>@startuml ERD_Фитнес-клуб
+hide circle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+entity "client" as client {
+  * id : int
+  --
+  full_name : varchar
+  phone : varchar
+  email : varchar
+  status : varchar
+}
+entity "company" as company {
+  * id : int
+  --
+  name : varchar
+  inn : varchar
+}
+entity "membership_type" as mtype {
+  * id : int
+  --
+  name : varchar
+  price : decimal
+  visit_limit : int
+  time_limit_to : time
+}
+entity "membership" as memb {
+  * id : int
+  --
+  # client_id : int
+  # company_id : int
+  # membership_type_id : int
+  price : decimal
+  visit_limit : int
+  starts_on : date
+  ends_on : date
+  status : varchar
+}
+entity "freeze_period" as freeze {
+  * id : int
+  --
+  # membership_id : int
+  starts_on : date
+  ends_on : date
+}
+entity "visit" as visit {
+  * id : int
+  --
+  # client_id : int
+  # membership_id : int
+  entered_at : datetime
+  left_at : datetime
+}
+entity "trainer" as trainer {
+  * id : int
+  --
+  full_name : varchar
+  status : varchar
+}
+entity "workout_type" as wtype {
+  * id : int
+  --
+  name : varchar
+}
+entity "trainer_workout_type" as twt {
+  * id : int
+  --
+  # trainer_id : int
+  # workout_type_id : int
+}
+entity "hall" as hall {
+  * id : int
+  --
+  name : varchar
+  capacity : int
+}
+entity "workout" as workout {
+  * id : int
+  --
+  # workout_type_id : int
+  # trainer_id : int
+  # hall_id : int
+  starts_at : datetime
+  capacity : int
+  status : varchar
+}
+entity "booking" as booking {
+  * id : int
+  --
+  # workout_id : int
+  # client_id : int
+  status : varchar
+  created_at : datetime
+}
+entity "personal_package" as pack {
+  * id : int
+  --
+  # client_id : int
+  # trainer_id : int
+  sessions_total : int
+  price : decimal
+}
+entity "personal_slot" as slot {
+  * id : int
+  --
+  # package_id : int
+  # trainer_id : int
+  starts_at : datetime
+  status : varchar
+}
+
+client   ||--o{ memb
+company  |o--o{ memb
+mtype    ||--o{ memb
+memb     ||--o{ freeze
+client   ||--o{ visit
+memb     ||--o{ visit
+trainer  ||--o{ twt
+wtype    ||--o{ twt
+wtype    ||--o{ workout
+trainer  ||--o{ workout
+hall     ||--o{ workout
+workout  ||--o{ booking
+client   ||--o{ booking
+client   ||--o{ pack
+trainer  ||--o{ pack
+pack     ||--o{ slot
+@enduml</pre>
+    <p class="hint">Как читать обозначения PlantUML: <code>||</code> — ровно один, <code>o|</code> — ноль или один, <code>o{</code> — ноль или много. То есть <code>client ||--o{ memb</code> читается «у одного клиента ноль или много карт, у карты ровно один клиент».</p>
+  </div></details>
+
+  <details class="spoil"><summary>10. Карта: каждое требование и его адрес в модели</summary><div class="sp-in">
+    <p>Финальная проверка работы аналитика: у каждого требования должно быть место, где оно живёт.</p>
+    <div class="tblwrap"><table>
+      <tr><th>Требование</th><th>Где живёт в решении</th></tr>
+      <tr><td>История карт, активная одна</td><td>membership + частичный unique по активным</td></tr>
+      <tr><td>Типы и снимок условий</td><td>membership_type + поля-снимки в membership</td></tr>
+      <tr><td>Фиксация проходов</td><td>visit</td></tr>
+      <tr><td>Занятие и вместимость</td><td>workout, hall.capacity</td></tr>
+      <tr><td>Отмена, неявки, блокировка</td><td>booking.status + правило процесса + таймер</td></tr>
+      <tr><td>Тренер ↔ вид</td><td>trainer_workout_type</td></tr>
+      <tr><td>Заморозка периодами</td><td>freeze_period + сдвиг membership.ends_on</td></tr>
+      <tr><td>Персональные тренировки</td><td>personal_package + personal_slot</td></tr>
+      <tr><td>Корпоративные карты</td><td>company + membership.company_id</td></tr>
+      <tr><td>Напоминание за сутки</td><td>процесс (таймер), опора — workout.starts_at</td></tr>
+      <tr><td>Возврат по двум условиям</td><td>membership.price (снимок) + visit (что использовано)</td></tr>
+      <tr><td>Двойная продажа слота</td><td>unique (trainer_id, starts_at)</td></tr>
+    </table></div>
+  </div></details>
+
+  <details class="spoil"><summary>11. BPMN: три готовые схемы процессов</summary><div class="sp-in">
     <div class="legend"><span><b>◯</b> старт</span><span><b>◉</b> финал</span><span><b>▭</b> задача</span><span><b>◇ ×</b> XOR, ровно одна ветка</span><span><b>⏱</b> таймер</span></div>
     <h4>Процесс 1. Покупка абонемента</h4>
     <div class="bpx">
@@ -1346,8 +1583,57 @@ function renderAll(){
       Покупатель — отдельный пул: кинотеатр не управляет его действиями. Внутри пула кинотеатра — дорожки «Касса» и «Зал». Между пулами — пунктирные потоки сообщений («заявка на возврат», «билет»). Sequence flow через границу пула — ошибка, которую валидатор bpmn.io даже не даст сохранить.
       <div class="sp-why">Перенос: спросите про каждого участника — «может ли система назначить ему задачу?» Нет — отдельный пул.</div></div></details>
   </div>`);
-  if(cur===4) vTasksStage(main,"Этап 5 · Данные: проектируем ERD","Требования из блокнота превращаются в сущности, связи и ограничения. Десять шагов — от списка сущностей до различения справочников и экземпляров.",E_TASKS,"Модель готова — к передаче в разработку →",5,
-  `<div class="card">
+  if(cur===4) vTasksStage(main,"Этап 5 · Данные: проектируем ERD","Требования из блокнота превращаются в сущности, связи и ограничения. Сначала — метод: порядок, в котором аналитик строит любую модель данных. Затем десять заданий, где вы применяете его к фитнес-клубу.",E_TASKS,"Модель готова — к передаче в разработку →",5,
+  `<div class="card ref">
+    <h3 style="margin:0 0 4px">Метод: как строится ERD — 11 шагов</h3>
+    <p class="hint" style="margin:0 0 10px">Порядок универсальный: он одинаково работает для фитнес-клуба, кинотеатра и банка. Держите его перед глазами, пока решаете задания ниже.</p>
+    <div class="tblwrap"><table>
+      <tr><th>#</th><th>Шаг</th><th>Вопрос, который вы себе задаёте</th></tr>
+      <tr><td>0</td><td>Взять требования</td><td>Что мне сказал заказчик? Модель строится из требований, а не из фантазии</td></tr>
+      <tr><td>1</td><td>Выписать существительные</td><td>Какие объекты вообще упоминались? Пишем широко, без фильтра</td></tr>
+      <tr><td>2</td><td>Отсеять лишнее</td><td>Это объект — или атрибут, правило, железо?</td></tr>
+      <tr><td>3</td><td>Разделить справочники и экземпляры</td><td>У этого есть дата, когда оно случилось?</td></tr>
+      <tr><td>4</td><td>Атрибуты и ключи</td><td>Какие поля минимально нужны? PK — id, FK — таблица_id</td></tr>
+      <tr><td>5</td><td>Связи и кардинальности</td><td>Сколько Б у одного А? И сколько А у одного Б?</td></tr>
+      <tr><td>6</td><td>Разрешить M:N</td><td>Где «много» с обеих сторон? Туда — связующая таблица</td></tr>
+      <tr><td>7</td><td>Историчность</td><td>Где прозвучало «даже если потом изменили»? Там нужен снимок</td></tr>
+      <tr><td>8</td><td>Журналы фактов</td><td>Где сказано «фиксируем каждый раз»? Там нужна таблица-журнал</td></tr>
+      <tr><td>9</td><td>Ограничения</td><td>Что должно быть физически невозможно? unique, RESTRICT, CHECK</td></tr>
+      <tr><td>10</td><td>Прогнать через события</td><td>Уволился, подорожало, отменили, удалили — модель это выдержит?</td></tr>
+      <tr><td>11</td><td>Записать допущения</td><td>Что я решил сам, потому что заказчик не сказал?</td></tr>
+    </table></div>
+
+    <details class="spoil"><summary>Шаг 2 подробно: как отсеять то, что сущностью не является</summary><div class="sp-in">
+      <p>Три вопроса к каждому кандидату из списка существительных:</p>
+      <div class="tblwrap"><table>
+        <tr><th>Вопрос</th><th>Если «нет» — это…</th><th>Примеры</th></tr>
+        <tr><td>Можно завести строку с атрибутами?</td><td><b>атрибут</b> другой сущности</td><td>QR-код, цена, вместимость зала</td></tr>
+        <tr><td>Это объект, а не поведение системы?</td><td><b>правило или процесс</b></td><td>«2 часа до начала», «30 дней в году», блокировка</td></tr>
+        <tr><td>Это про данные, а не про железо и экраны?</td><td><b>вне модели данных</b></td><td>турникет, кнопка, мобильное приложение</td></tr>
+      </table></div>
+      <p class="hint">Частая ошибка: оставить «неявку» отдельной сущностью. Неявка не существует сама по себе — она всегда неявка на конкретную запись, то есть её статус.</p>
+    </div></details>
+
+    <details class="spoil"><summary>Шаг 3 подробно: справочник или экземпляр — тест одним вопросом</summary><div class="sp-in">
+      <p>Спросите: <b>«у этого есть дата, когда оно случилось?»</b> Есть — экземпляр. Нет, это каталог, из которого выбирают — справочник.</p>
+      <div class="tblwrap"><table>
+        <tr><th>Справочник — что бывает</th><th>Экземпляр — что случилось</th></tr>
+        <tr><td>Тариф «Безлимит», направление «Йога»</td><td>Карта Ивана от 3 мая, йога в пятницу 19:00</td></tr>
+        <tr><td>Фильм «Дюна», тип места «VIP»</td><td>Сеанс в четверг 21:00, проданный билет</td></tr>
+      </table></div>
+      <p>Из этого шага сразу следуют связи 1:N (справочник → экземпляры) и становится видно, где на шаге 7 понадобятся снимки: цена живёт в справочнике, но фиксируется в экземпляре.</p>
+    </div></details>
+
+    <details class="spoil"><summary>Шаг 5 подробно: почему «одна активная карта» — это не 1:1</summary><div class="sp-in">
+      <p>Самая частая ошибка на этом шаге. Заказчик говорит «действующая карта одна» — и ученик рисует связь один-к-одному. Но:</p>
+      <ul>
+        <li><b>Кардинальность</b> отвечает, сколько строк может существовать <b>вообще</b>. Карт у клиента за годы много — значит, 1:N.</li>
+        <li><b>«Активная одна»</b> — ограничение на <b>подмножество</b> строк (те, что в статусе active). Оно реализуется частичным уникальным индексом, а не типом связи.</li>
+      </ul>
+      <p class="hint">Тот же приём: «основная карта оплаты одна», «действующий паспорт один», «текущий тариф один» — везде связь 1:N плюс ограничение.</p>
+    </div></details>
+  </div>
+  <div class="card">
     <h3 style="margin:0 0 4px; font-family:Georgia,serif; font-weight:400; font-size:18px">Примеры: готовые фрагменты ERD из другого кейса (кинотеатр)</h3>
     <p class="hint" style="margin:0 0 10px">Смотрите на приёмы — и переносите их на фитнес-клуб.</p>
     <details class="spoil"><summary>Пример 1 — снапшот цены в билете (нажмите, чтобы открыть)</summary><div class="sp-in">
